@@ -28,13 +28,10 @@ spring:
 #        password: ${REDIS_PASSWORD}
 #        database: ${REDIS_DATABASE}
 
-#  main:
-#    allow-bean-definition-overriding: true
 
 cors:
-  api-key: ${API_KEY}
-  allowed-origins:
-    - http://localhost:3000
+  api-key: ${CORS_API_KEY}
+  allowed-origins: ${CORS_ORIGINS}
 
 
 bot:
@@ -42,5 +39,5 @@ bot:
 
 
 jwt:
-  secret: BPQ4uUaYXzhDwqaQ7zohUophwucdExzxMPjfnexHojAfgyfD3RGumTrnFxJcrETGgMJY99UpqMzNwuFNbFHvaRAbodp6moHWhkxzUqMa2ecsZcDGykynCZQiQVbemBWR7baWXs3WVwrZa7CgXBhqCpCYg7KyqDmhwVb4h2Km2MnQLVJArW9KFo8MC2dR6YGycg8qRCNE
-  token-expiration-minutes: 14400
+  secret: ${JWT_TOKEN_SECRET}
+  token-expiration-minutes: ${JWT_TOKEN_EXPIRATION_MIN}
