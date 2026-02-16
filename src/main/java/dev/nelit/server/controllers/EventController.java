@@ -1,0 +1,41 @@
+package dev.nelit.server.controllers;
+
+import dev.nelit.server.dto.event.EventUpsertDTO;
+import dev.nelit.server.services.event.api.EventService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/v1/events")
+public class EventController {
+
+    private final EventService eventService;
+
+    public EventController(EventService eventService) {
+        this.eventService = eventService;
+    }
+
+    @GetMapping
+    public Mono<ResponseEntity<Map<String, Object>>> getEvents(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        return eventService.getEvents(page, size)
+            .map(response -> ResponseEntity.ok(Map.of("status", true, "response", response)));
+    }
+
+    @GetMapping("/{eventID}")
+    public Mono<ResponseEntity<Map<String, Object>>> getEvent(@PathVariable int eventID) {
+        return eventService.getEvent(eventID)
+            .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
+    }
+
+    @PostMapping
+    public Mono<ResponseEntity<Map<String, Object>>> upsertEvent(@RequestBody EventUpsertDTO dto) {
+        return eventService.upsertEvent(dto)
+            .map(eventID -> ResponseEntity.ok(Map.of("status", true, "event_id", eventID)));
+    }
+}
