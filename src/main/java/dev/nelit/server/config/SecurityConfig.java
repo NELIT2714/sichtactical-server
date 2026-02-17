@@ -76,6 +76,7 @@ public class SecurityConfig {
 
                 .pathMatchers("/v1/events/**").authenticated()
 
+                .pathMatchers(HttpMethod.POST, "/v1/users/init").permitAll()
                 .pathMatchers(HttpMethod.GET,  "/v1/users/me").authenticated()
 
                 .anyExchange().denyAll()
