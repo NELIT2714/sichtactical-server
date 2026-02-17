@@ -1,8 +1,11 @@
 package dev.nelit.server.controllers;
 
+import dev.nelit.server.dto.event.EventSignUpDTO;
 import dev.nelit.server.dto.event.EventUpsertDTO;
+import dev.nelit.server.security.TelegramUserDetails;
 import dev.nelit.server.services.event.api.EventService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -29,8 +32,16 @@ public class EventController {
 
     @GetMapping("/{eventID}")
     public Mono<ResponseEntity<Map<String, Object>>> getEvent(@PathVariable int eventID) {
-        return eventService.getEvent(eventID)
+        return eventService.getEventResponse(eventID)
             .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
+    }
+
+    @PostMapping("/{eventID}/sign-up")
+    public Mono<ResponseEntity<Map<String, Object>>> signUp(@AuthenticationPrincipal TelegramUserDetails user,
+                                                            @PathVariable int eventID,
+                                                            @RequestBody EventSignUpDTO dto) {
+        return eventService.signUp(eventID, user.getUser().getIdUser(), dto)
+            .then(Mono.fromCallable(() -> ResponseEntity.ok(Map.of("status", true))));
     }
 
     @PostMapping

@@ -35,6 +35,10 @@ public class User {
     @Column("referral_code")
     private String referralCode;
 
+    @JsonProperty("save_data")
+    @Column("save_data")
+    private Boolean saveData;
+
     public User(Integer idUserTelegramData, String referralCode) {
         this.idUserTelegramData = idUserTelegramData;
         this.referralCode = referralCode;
@@ -82,5 +86,13 @@ public class User {
 
     public void setReferralCode(String referralCode) {
         this.referralCode = referralCode;
+    }
+
+    public Boolean getSaveData() {
+        return saveData;
+    }
+
+    public void setSaveData(Boolean saveData) {
+        this.saveData = saveData;
     }
 }

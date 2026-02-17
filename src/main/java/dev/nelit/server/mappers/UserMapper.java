@@ -18,6 +18,7 @@ public final class UserMapper {
         dto.setBalance(user.getBalance());
         dto.setReferralCode(user.getReferralCode());
         dto.setTelegramData(toTelegramDTO(tg));
+        dto.setSaveData(user.getSaveData());
         return dto;
     }
 

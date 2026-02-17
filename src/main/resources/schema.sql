@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS tbl_users
     xp_total               INTEGER UNSIGNED DEFAULT 0,
     balance                DECIMAL(10,2) DEFAULT 0,
     referral_code          VARCHAR(12) NOT NULL,
+    save_data              BOOLEAN DEFAULT TRUE,
 
     PRIMARY KEY (id_user),
     UNIQUE (referral_code),
@@ -63,6 +64,31 @@ CREATE TABLE IF NOT EXISTS tbl_events
     PRIMARY KEY (id_event),
 
     FOREIGN KEY (id_location) REFERENCES tbl_events_locations(id_location)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+
+
+
+CREATE TABLE IF NOT EXISTS tbl_events_members
+(
+    id_event_member             INTEGER UNSIGNED AUTO_INCREMENT NOT NULL,
+    id_event                    INTEGER UNSIGNED NOT NULL,
+    id_user                     INTEGER UNSIGNED NOT NULL,
+    full_name                   VARCHAR(150) NOT NULL,
+    call_sign                   VARCHAR(20),
+    phone_number                VARCHAR(16) NOT NULL,
+    equipment                   ENUM('OWN', 'RENT') NOT NULL,
+    registration_timestamp      DATETIME NOT NULL,
+
+    PRIMARY KEY (id_event_member),
+    UNIQUE (id_event, id_user),
+
+    FOREIGN KEY (id_event) REFERENCES tbl_events(id_event)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (id_user) REFERENCES tbl_users(id_user)
         ON DELETE RESTRICT
         ON UPDATE CASCADE
 );

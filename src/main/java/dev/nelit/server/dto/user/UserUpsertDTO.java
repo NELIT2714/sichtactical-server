@@ -30,6 +30,9 @@ public class UserUpsertDTO {
     @JsonProperty("call_sign")
     private Boolean callSign;
 
+    @JsonProperty("save_data")
+    private Boolean saveData;
+
     public String getUserTelegramID() {
         return userTelegramID;
     }
@@ -60,5 +63,9 @@ public class UserUpsertDTO {
 
     public Boolean getCallSign() {
         return callSign;
+    }
+
+    public Boolean getSaveData() {
+        return saveData;
     }
 }

@@ -27,6 +27,9 @@ public class UserResponseDTO {
     @JsonProperty("telegram_data")
     private UserTelegramDataResponseDTO telegramData;
 
+    @JsonProperty("save_data")
+    private Boolean saveData;
+
     public UserResponseDTO() {
     }
 
@@ -84,5 +87,13 @@ public class UserResponseDTO {
 
     public void setTelegramData(UserTelegramDataResponseDTO telegramData) {
         this.telegramData = telegramData;
+    }
+
+    public Boolean getSaveData() {
+        return saveData;
+    }
+
+    public void setSaveData(Boolean saveData) {
+        this.saveData = saveData;
     }
 }

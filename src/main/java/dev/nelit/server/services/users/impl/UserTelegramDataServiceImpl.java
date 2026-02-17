@@ -7,20 +7,23 @@ import dev.nelit.server.repositories.user.UserTelegramDataRepository;
 import dev.nelit.server.services.users.api.UserTelegramDataService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
 @Service
 public class UserTelegramDataServiceImpl implements UserTelegramDataService {
 
     private final UserTelegramDataRepository userTelegramDataRepository;
+    private final TransactionalOperator tx;
 
-    public UserTelegramDataServiceImpl(UserTelegramDataRepository userTelegramDataRepository) {
+    public UserTelegramDataServiceImpl(UserTelegramDataRepository userTelegramDataRepository, TransactionalOperator tx) {
         this.userTelegramDataRepository = userTelegramDataRepository;
+        this.tx = tx;
     }
 
     @Override
     public Mono<UserTelegramData> upsertTelegramData(UserUpsertDTO dto) {
-        return userTelegramDataRepository.getUserTelegramDataByTelegramId(dto.getUserTelegramID())
+        return tx.transactional(userTelegramDataRepository.getUserTelegramDataByTelegramId(dto.getUserTelegramID())
             .flatMap(existing -> {
                 boolean changed = false;
 
@@ -60,17 +63,12 @@ public class UserTelegramDataServiceImpl implements UserTelegramDataService {
                     dto.getUserTelegramID(), dto.getFirstName(), dto.getLastName().isBlank() ? null : dto.getLastName(),
                     dto.getUsername().isBlank() ? null : dto.getUsername(), null, dto.getLanguageCode(), dto.getIsPremium()
                 ));
-            }));
+            })));
     }
 
     @Override
     public Mono<UserTelegramData> getUserByTelegramID(String telegramID) {
         return userTelegramDataRepository.getUserTelegramDataByTelegramId(telegramID)
             .switchIfEmpty(Mono.error(new HTTPException(HttpStatus.NOT_FOUND, "User not found")));
-    }
-
-    @Override
-    public Mono<Boolean> existsByTelegramId(String telegramID) {
-        return userTelegramDataRepository.existsByTelegramId(telegramID);
     }
 }

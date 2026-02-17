@@ -9,6 +9,7 @@ import dev.nelit.server.repositories.event.rule.EventRuleRepository;
 import dev.nelit.server.services.event.api.EventRuleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,9 +23,12 @@ public class EventRuleServiceImpl implements EventRuleService {
     private final EventRuleRepository eventRuleRepository;
     private final EventRuleI18nRepository eventRuleI18nRepository;
 
-    public EventRuleServiceImpl(EventRuleRepository eventRuleRepository, EventRuleI18nRepository eventRuleI18nRepository) {
+    private final TransactionalOperator tx;
+
+    public EventRuleServiceImpl(EventRuleRepository eventRuleRepository, EventRuleI18nRepository eventRuleI18nRepository, TransactionalOperator tx) {
         this.eventRuleRepository = eventRuleRepository;
         this.eventRuleI18nRepository = eventRuleI18nRepository;
+        this.tx = tx;
     }
 
     @Override
@@ -34,7 +38,7 @@ public class EventRuleServiceImpl implements EventRuleService {
         String firstLang = rules.keySet().iterator().next();
         List<EventRuleDTO> structure = rules.get(firstLang);
 
-        return Flux.fromIterable(structure)
+        return tx.transactional(Flux.fromIterable(structure)
             .flatMap(dto -> {
                 Mono<EventRule> ruleMono;
 
@@ -70,6 +74,6 @@ public class EventRuleServiceImpl implements EventRuleService {
                     )
                     .then());
             })
-            .then();
+            .then());
     }
 }

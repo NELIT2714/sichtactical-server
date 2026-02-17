@@ -2,6 +2,7 @@ package dev.nelit.server.services.event.impl;
 
 import dev.nelit.server.dto.event.EventPageResponseDTO;
 import dev.nelit.server.dto.event.EventResponseDTO;
+import dev.nelit.server.dto.event.EventSignUpDTO;
 import dev.nelit.server.dto.event.EventUpsertDTO;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
@@ -10,6 +11,7 @@ import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
+import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.EventMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
 import dev.nelit.server.repositories.event.EventLocationRepository;
@@ -18,12 +20,11 @@ import dev.nelit.server.repositories.event.program.EventProgramI18nRepository;
 import dev.nelit.server.repositories.event.program.EventProgramRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleI18nRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleRepository;
-import dev.nelit.server.services.event.api.EventService;
-import dev.nelit.server.services.event.api.EventDataService;
-import dev.nelit.server.services.event.api.EventLocationService;
-import dev.nelit.server.services.event.api.EventProgramService;
-import dev.nelit.server.services.event.api.EventRuleService;
+import dev.nelit.server.services.event.api.*;
+import dev.nelit.server.services.users.impl.UserServiceImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -44,6 +45,10 @@ public class EventServiceImpl implements EventService {
     private final EventDataService eventDataService;
     private final EventRuleService eventRuleService;
     private final EventProgramService eventProgramService;
+    private final EventMemberServiceImpl eventMemberService;
+    private final UserServiceImpl userService;
+
+    private final TransactionalOperator tx;
 
     public EventServiceImpl(EventRepository eventRepository,
                             EventLocationRepository eventLocationRepository,
@@ -55,7 +60,7 @@ public class EventServiceImpl implements EventService {
                             EventLocationService eventLocationService,
                             EventDataService eventDataService,
                             EventRuleService eventRuleService,
-                            EventProgramService eventProgramService) {
+                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserServiceImpl userServiceImpl, TransactionalOperator tx) {
         this.eventRepository = eventRepository;
         this.eventLocationRepository = eventLocationRepository;
         this.eventDataRepository = eventDataRepository;
@@ -67,6 +72,9 @@ public class EventServiceImpl implements EventService {
         this.eventDataService = eventDataService;
         this.eventRuleService = eventRuleService;
         this.eventProgramService = eventProgramService;
+        this.eventMemberService = eventMemberService;
+        this.userService = userServiceImpl;
+        this.tx = tx;
     }
 
     @Override
@@ -77,7 +85,7 @@ public class EventServiceImpl implements EventService {
         Flux<Event> eventsFlux = eventRepository.findAllPaged(size, offset);
 
         return totalMono
-            .zipWith(eventsFlux.flatMap(event -> getEvent(event.getIdEvent())).collectList())
+            .zipWith(eventsFlux.flatMap(event -> getEventResponse(event.getIdEvent())).collectList())
             .map(tuple -> {
                 long totalElements = tuple.getT1();
                 List<EventResponseDTO> content = tuple.getT2();
@@ -89,7 +97,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Mono<EventResponseDTO> getEvent(int eventID) {
+    public Mono<Event> getEvent(int eventID) {
+        return eventRepository.findById(eventID).switchIfEmpty(Mono.error(new HTTPException(HttpStatus.NOT_FOUND, "Event not found")));
+    }
+
+    @Override
+    public Mono<EventResponseDTO> getEventResponse(int eventID) {
         return eventRepository.findById(eventID)
             .flatMap(event ->
                 Mono.zip(
@@ -123,8 +136,16 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public Mono<Void> signUp(int eventID, int userID, EventSignUpDTO eventSignUpDTO) {
+        return tx.transactional(getEvent(eventID)
+            .flatMap(event -> userService.getUser(userID)
+                .flatMap(user -> eventMemberService.signUpForEvent(event, user, eventSignUpDTO)))
+            .then());
+    }
+
+    @Override
     public Mono<Integer> upsertEvent(EventUpsertDTO dto) {
-        return eventLocationService.upsertLocation(dto.getLocation())
+        return tx.transactional(eventLocationService.upsertLocation(dto.getLocation())
             .flatMap(location -> {
                 Mono<Event> eventMono;
 
@@ -177,6 +198,6 @@ public class EventServiceImpl implements EventService {
                         eventProgramService.upsertEventProgram(event.getIdEvent(), dto.getEventProgram())
                     ).thenReturn(event.getIdEvent())
                 );
-            });
+            }));
     }
 }

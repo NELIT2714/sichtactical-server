@@ -9,6 +9,7 @@ import dev.nelit.server.repositories.event.program.EventProgramRepository;
 import dev.nelit.server.services.event.api.EventProgramService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,21 +23,22 @@ public class EventProgramServiceImpl implements EventProgramService {
     private final EventProgramRepository eventProgramRepository;
     private final EventProgramI18nRepository eventProgramI18nRepository;
 
-    public EventProgramServiceImpl(EventProgramRepository eventProgramRepository, EventProgramI18nRepository eventProgramI18nRepository) {
+    private final TransactionalOperator tx;
+
+    public EventProgramServiceImpl(EventProgramRepository eventProgramRepository, EventProgramI18nRepository eventProgramI18nRepository, TransactionalOperator tx) {
         this.eventProgramRepository = eventProgramRepository;
         this.eventProgramI18nRepository = eventProgramI18nRepository;
+        this.tx = tx;
     }
 
     @Override
     public Mono<Void> upsertEventProgram(int eventID, Map<String, List<EventProgramDTO>> program) {
-        if (program == null || program.isEmpty()) {
-            return Mono.empty(); // ничего не трогаем
-        }
+        if (program == null || program.isEmpty()) return Mono.empty();
 
         String firstLang = program.keySet().iterator().next();
         List<EventProgramDTO> structure = program.get(firstLang);
 
-        return Flux.fromIterable(structure)
+        return tx.transactional(Flux.fromIterable(structure)
             .flatMap(dto -> {
                 Mono<EventProgram> programMono;
 
@@ -74,6 +76,6 @@ public class EventProgramServiceImpl implements EventProgramService {
                     )
                     .then());
             })
-            .then();
+            .then());
     }
 }

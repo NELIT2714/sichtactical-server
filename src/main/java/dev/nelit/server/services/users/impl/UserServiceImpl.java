@@ -3,12 +3,17 @@ package dev.nelit.server.services.users.impl;
 import dev.nelit.server.dto.user.UserUpsertDTO;
 import dev.nelit.server.dto.user.UserResponseDTO;
 import dev.nelit.server.entity.user.User;
+import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.UserMapper;
 import dev.nelit.server.repositories.user.UserRepository;
 import dev.nelit.server.services.referral.ReferralServiceImpl;
 import dev.nelit.server.services.users.api.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -17,23 +22,36 @@ public class UserServiceImpl implements UserService {
     private final UserTelegramDataServiceImpl telegramDataService;
     private final ReferralServiceImpl referralService;
 
-    public UserServiceImpl(UserRepository userRepository, UserTelegramDataServiceImpl telegramDataService, ReferralServiceImpl referralService) {
+    private final TransactionalOperator tx;
+
+    public UserServiceImpl(UserRepository userRepository, UserTelegramDataServiceImpl telegramDataService, ReferralServiceImpl referralService, TransactionalOperator tx) {
         this.userRepository = userRepository;
         this.telegramDataService = telegramDataService;
         this.referralService = referralService;
+        this.tx = tx;
+    }
+
+    @Override
+    public Mono<User> getUser(int userID) {
+        return userRepository.findById(userID).switchIfEmpty(Mono.error(new HTTPException(HttpStatus.NOT_FOUND, "User not found")));
     }
 
     @Override
     public Mono<UserResponseDTO> upsertUser(UserUpsertDTO dto) {
-        return telegramDataService.upsertTelegramData(dto)
+        return tx.transactional(telegramDataService.upsertTelegramData(dto)
             .flatMap(tgData ->
                 userRepository.getUserByIdUserTelegramData(tgData.getIdUserTelegramData())
-                    .switchIfEmpty(
-                        referralService.generate().flatMap(code ->
-                            userRepository.save(new User(tgData.getIdUserTelegramData(), code)))
-                    )
+                    .flatMap(user -> {
+                        if (!Objects.equals(user.getSaveData(), dto.getSaveData())) {
+                            user.setSaveData(dto.getSaveData());
+                            return userRepository.save(user);
+                        }
+
+                        return Mono.just(user);
+                    })
+                    .switchIfEmpty(referralService.generate().flatMap(code -> userRepository.save(new User(tgData.getIdUserTelegramData(), code))))
                     .map(user -> UserMapper.toResponseDTO(user, tgData))
-            );
+            ));
     }
 
     @Override

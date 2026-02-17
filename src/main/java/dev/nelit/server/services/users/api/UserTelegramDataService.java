@@ -8,6 +8,4 @@ public interface UserTelegramDataService {
     Mono<UserTelegramData> upsertTelegramData(UserUpsertDTO dto);
 
     Mono<UserTelegramData> getUserByTelegramID(String telegramID);
-
-    Mono<Boolean> existsByTelegramId(String telegramID);
 }
