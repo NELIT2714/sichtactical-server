@@ -11,6 +11,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -27,7 +28,6 @@ public class EventMemberServiceImpl implements EventMemberService {
 
     @Override
     public Mono<Void> signUpForEvent(Event event, User user, EventSignUpDTO dto) {
-
         return tx.transactional(eventMemberRepository.save(new EventMember(
                 event.getIdEvent(),
                 user.getIdUser(),

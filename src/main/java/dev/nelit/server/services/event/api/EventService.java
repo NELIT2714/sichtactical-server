@@ -9,11 +9,11 @@ import dev.nelit.server.entity.user.User;
 import reactor.core.publisher.Mono;
 
 public interface EventService {
-    Mono<EventPageResponseDTO> getEvents(int page, int size);
+    Mono<EventPageResponseDTO> getEvents(int page, int size, Integer userID);
 
     Mono<Event> getEvent(int eventID);
 
-    Mono<EventResponseDTO> getEventResponse(int eventID);
+    Mono<EventResponseDTO> getEventResponse(int eventID, Integer userID);
 
     Mono<Void> signUp(int eventID, int userID, EventSignUpDTO eventSignUpDTO);
 

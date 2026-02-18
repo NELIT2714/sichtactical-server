@@ -40,6 +40,12 @@ public class EventResponseDTO {
     @JsonProperty("event_program")
     private Map<String, List<EventProgramDTO>> eventProgram;
 
+    @JsonProperty("registered")
+    private Boolean isRegistered;
+
+    @JsonProperty("members")
+    private Integer members;
+
     public Integer getIdEvent() {
         return idEvent;
     }
@@ -118,5 +124,21 @@ public class EventResponseDTO {
 
     public void setEventProgram(Map<String, List<EventProgramDTO>> eventProgram) {
         this.eventProgram = eventProgram;
+    }
+
+    public Boolean getRegistered() {
+        return isRegistered;
+    }
+
+    public void setRegistered(Boolean registered) {
+        isRegistered = registered;
+    }
+
+    public Integer getMembers() {
+        return members;
+    }
+
+    public void setMembers(Integer members) {
+        this.members = members;
     }
 }

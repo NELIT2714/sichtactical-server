@@ -7,14 +7,17 @@ import dev.nelit.server.dto.event.EventUpsertDTO;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
 import dev.nelit.server.entity.event.EventLocation;
+import dev.nelit.server.entity.event.EventMember;
 import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
+import dev.nelit.server.entity.user.User;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.EventMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
 import dev.nelit.server.repositories.event.EventLocationRepository;
+import dev.nelit.server.repositories.event.EventMemberRepository;
 import dev.nelit.server.repositories.event.EventRepository;
 import dev.nelit.server.repositories.event.program.EventProgramI18nRepository;
 import dev.nelit.server.repositories.event.program.EventProgramRepository;
@@ -40,6 +43,7 @@ public class EventServiceImpl implements EventService {
     private final EventRuleI18nRepository eventRuleI18nRepository;
     private final EventProgramRepository eventProgramRepository;
     private final EventProgramI18nRepository eventProgramI18nRepository;
+    private final EventMemberRepository eventMemberRepository;
 
     private final EventLocationService eventLocationService;
     private final EventDataService eventDataService;
@@ -56,7 +60,7 @@ public class EventServiceImpl implements EventService {
                             EventRuleRepository eventRuleRepository,
                             EventRuleI18nRepository eventRuleI18nRepository,
                             EventProgramRepository eventProgramRepository,
-                            EventProgramI18nRepository eventProgramI18nRepository,
+                            EventProgramI18nRepository eventProgramI18nRepository, EventMemberRepository eventMemberRepository,
                             EventLocationService eventLocationService,
                             EventDataService eventDataService,
                             EventRuleService eventRuleService,
@@ -68,6 +72,7 @@ public class EventServiceImpl implements EventService {
         this.eventRuleI18nRepository = eventRuleI18nRepository;
         this.eventProgramRepository = eventProgramRepository;
         this.eventProgramI18nRepository = eventProgramI18nRepository;
+        this.eventMemberRepository = eventMemberRepository;
         this.eventLocationService = eventLocationService;
         this.eventDataService = eventDataService;
         this.eventRuleService = eventRuleService;
@@ -78,14 +83,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Mono<EventPageResponseDTO> getEvents(int page, int size) {
+    public Mono<EventPageResponseDTO> getEvents(int page, int size, Integer userID) {
         int offset = page * size;
 
         Mono<Long> totalMono = eventRepository.countAll();
         Flux<Event> eventsFlux = eventRepository.findAllPaged(size, offset);
 
         return totalMono
-            .zipWith(eventsFlux.flatMap(event -> getEventResponse(event.getIdEvent())).collectList())
+            .zipWith(eventsFlux.flatMap(event -> getEventResponse(event.getIdEvent(), userID)).collectList())
             .map(tuple -> {
                 long totalElements = tuple.getT1();
                 List<EventResponseDTO> content = tuple.getT2();
@@ -102,19 +107,24 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Mono<EventResponseDTO> getEventResponse(int eventID) {
+    public Mono<EventResponseDTO> getEventResponse(int eventID, Integer userID) {
+
         return eventRepository.findById(eventID)
             .flatMap(event ->
                 Mono.zip(
                     eventLocationRepository.findById(event.getIdLocation()),
                     eventDataRepository.findByIdEvent(eventID).collectList(),
                     eventRuleRepository.findByIdEvent(eventID).collectList(),
-                    eventProgramRepository.findByIdEvent(eventID).collectList()
+                    eventProgramRepository.findByIdEvent(eventID).collectList(),
+                    eventMemberRepository.existsEventMemberByIdEventAndIdUser(eventID, userID).defaultIfEmpty(false),
+                    eventMemberRepository.countEventMemberByIdEventAndIdUser(eventID, userID).defaultIfEmpty(0)
                 ).flatMap(tuple -> {
                     EventLocation location = tuple.getT1();
                     List<EventData> data = tuple.getT2();
                     List<EventRule> rules = tuple.getT3();
                     List<EventProgram> programs = tuple.getT4();
+                    boolean isRegistered = tuple.getT5();
+                    int members = tuple.getT6();
 
                     List<Integer> ruleIds = rules.stream().map(EventRule::getIdEventRule).toList();
                     List<Integer> programIds = programs.stream().map(EventProgram::getIdEventProgram).toList();
@@ -129,7 +139,7 @@ public class EventServiceImpl implements EventService {
 
                     return Mono.zip(rulesI18nMono, programsI18nMono)
                         .map(i18nTuple -> EventMapper.toResponseDTO(
-                            event, location, data, rules, i18nTuple.getT1(), programs, i18nTuple.getT2()
+                            event, location, data, rules, i18nTuple.getT1(), programs, i18nTuple.getT2(), isRegistered, members
                         ));
                 })
             );

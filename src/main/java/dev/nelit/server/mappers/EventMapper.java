@@ -1,10 +1,6 @@
 package dev.nelit.server.mappers;
 
-import dev.nelit.server.dto.event.EventDataDTO;
-import dev.nelit.server.dto.event.EventLocationDTO;
-import dev.nelit.server.dto.event.EventProgramDTO;
-import dev.nelit.server.dto.event.EventResponseDTO;
-import dev.nelit.server.dto.event.EventRuleDTO;
+import dev.nelit.server.dto.event.*;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
 import dev.nelit.server.entity.event.EventLocation;
@@ -21,8 +17,9 @@ public final class EventMapper {
     private EventMapper() {}
 
     public static EventResponseDTO toResponseDTO(Event event, EventLocation location, List<EventData> data,
-                                                  List<EventRule> rules, List<EventRuleI18n> rulesI18n,
-                                                  List<EventProgram> programs, List<EventProgramI18n> programsI18n) {
+                                                 List<EventRule> rules, List<EventRuleI18n> rulesI18n,
+                                                 List<EventProgram> programs, List<EventProgramI18n> programsI18n,
+                                                 boolean isRegistered, int members) {
         Set<String> languages = data.stream().map(EventData::getLang).collect(Collectors.toSet());
 
         EventResponseDTO response = new EventResponseDTO();
@@ -36,6 +33,8 @@ public final class EventMapper {
         response.setEventData(getDataResponse(data));
         response.setEventRules(getRulesResponse(rules, rulesI18n, languages));
         response.setEventProgram(getProgramResponse(programs, programsI18n, languages));
+        response.setRegistered(isRegistered);
+        response.setMembers(members);
         return response;
     }
 

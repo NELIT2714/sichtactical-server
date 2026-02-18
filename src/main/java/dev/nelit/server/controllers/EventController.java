@@ -23,16 +23,17 @@ public class EventController {
 
     @GetMapping
     public Mono<ResponseEntity<Map<String, Object>>> getEvents(
+        @AuthenticationPrincipal TelegramUserDetails user,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
-        return eventService.getEvents(page, size)
+        return eventService.getEvents(page, size, user.getUser().getIdUser())
             .map(response -> ResponseEntity.ok(Map.of("status", true, "response", response)));
     }
 
     @GetMapping("/{eventID}")
-    public Mono<ResponseEntity<Map<String, Object>>> getEvent(@PathVariable int eventID) {
-        return eventService.getEventResponse(eventID)
+    public Mono<ResponseEntity<Map<String, Object>>> getEvent(@AuthenticationPrincipal TelegramUserDetails user, @PathVariable int eventID) {
+        return eventService.getEventResponse(eventID, user.getUser().getIdUser())
             .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
     }
 
