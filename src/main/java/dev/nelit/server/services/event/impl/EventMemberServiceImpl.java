@@ -27,12 +27,12 @@ public class EventMemberServiceImpl implements EventMemberService {
     }
 
     @Override
-    public Mono<Void> signUpForEvent(Event event, User user, EventSignUpDTO dto) {
+    public Mono<Void> signUp(Event event, User user, EventSignUpDTO dto) {
         return tx.transactional(eventMemberRepository.save(new EventMember(
                 event.getIdEvent(),
                 user.getIdUser(),
                 dto.getFullName(),
-                dto.getCallSign(),
+                dto.getCallSign().isBlank() ? null : dto.getCallSign(),
                 dto.getPhoneNumber(),
                 dto.getEquipmentType()
             )))
@@ -41,4 +41,11 @@ public class EventMemberServiceImpl implements EventMemberService {
             )
             .then();
     }
+
+    @Override
+    public Mono<Void> signOut(int eventID, int userID) {
+        return eventMemberRepository.deleteByIdEventAndIdUser(eventID, userID);
+    }
+
+
 }

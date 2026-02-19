@@ -17,5 +17,8 @@ public interface EventService {
 
     Mono<Void> signUp(int eventID, int userID, EventSignUpDTO eventSignUpDTO);
 
+    Mono<Void> signOut(int eventID, int userID);
+
     Mono<Integer> upsertEvent(EventUpsertDTO dto);
+
 }

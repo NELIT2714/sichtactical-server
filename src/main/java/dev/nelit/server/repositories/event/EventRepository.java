@@ -9,7 +9,11 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface EventRepository extends ReactiveCrudRepository<Event, Integer> {
-    @Query("SELECT * FROM tbl_events ORDER BY id_event LIMIT :limit OFFSET :offset")
+    @Query("""
+        SELECT * FROM tbl_events
+        ORDER BY event_date ASC, start_time ASC
+        LIMIT :limit OFFSET :offset
+    """)
     Flux<Event> findAllPaged(int limit, int offset);
 
     @Query("SELECT COUNT(*) FROM tbl_events")

@@ -7,12 +7,10 @@ import dev.nelit.server.dto.event.EventUpsertDTO;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
 import dev.nelit.server.entity.event.EventLocation;
-import dev.nelit.server.entity.event.EventMember;
 import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
-import dev.nelit.server.entity.user.User;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.EventMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
@@ -90,7 +88,7 @@ public class EventServiceImpl implements EventService {
         Flux<Event> eventsFlux = eventRepository.findAllPaged(size, offset);
 
         return totalMono
-            .zipWith(eventsFlux.flatMap(event -> getEventResponse(event.getIdEvent(), userID)).collectList())
+            .zipWith(eventsFlux.concatMap(event -> getEventResponse(event.getIdEvent(), userID)).collectList())
             .map(tuple -> {
                 long totalElements = tuple.getT1();
                 List<EventResponseDTO> content = tuple.getT2();
@@ -149,8 +147,13 @@ public class EventServiceImpl implements EventService {
     public Mono<Void> signUp(int eventID, int userID, EventSignUpDTO eventSignUpDTO) {
         return tx.transactional(getEvent(eventID)
             .flatMap(event -> userService.getUser(userID)
-                .flatMap(user -> eventMemberService.signUpForEvent(event, user, eventSignUpDTO)))
+                .flatMap(user -> eventMemberService.signUp(event, user, eventSignUpDTO)))
             .then());
+    }
+
+    @Override
+    public Mono<Void> signOut(int eventID, int userID) {
+        return tx.transactional(eventMemberService.signOut(eventID, userID));
     }
 
     @Override

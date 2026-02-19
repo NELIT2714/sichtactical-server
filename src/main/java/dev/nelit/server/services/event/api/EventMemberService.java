@@ -6,5 +6,7 @@ import dev.nelit.server.entity.user.User;
 import reactor.core.publisher.Mono;
 
 public interface EventMemberService {
-    Mono<Void> signUpForEvent(Event event, User user, EventSignUpDTO eventSignUpDTO);
+    Mono<Void> signUp(Event event, User user, EventSignUpDTO eventSignUpDTO);
+
+    Mono<Void> signOut(int eventID, int userID);
 }

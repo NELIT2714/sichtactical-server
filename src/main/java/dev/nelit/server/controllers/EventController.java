@@ -37,11 +37,17 @@ public class EventController {
             .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
     }
 
-    @PostMapping("/{eventID}/sign-up")
+    @PostMapping("/{eventID}/members")
     public Mono<ResponseEntity<Map<String, Object>>> signUp(@AuthenticationPrincipal TelegramUserDetails user,
                                                             @PathVariable int eventID,
                                                             @RequestBody EventSignUpDTO dto) {
         return eventService.signUp(eventID, user.getUser().getIdUser(), dto)
+            .then(Mono.fromCallable(() -> ResponseEntity.ok(Map.of("status", true))));
+    }
+
+    @DeleteMapping("/{eventID}/members")
+    public Mono<ResponseEntity<Map<String, Object>>> signOut(@AuthenticationPrincipal TelegramUserDetails user, @PathVariable int eventID) {
+        return eventService.signOut(eventID, user.getUser().getIdUser())
             .then(Mono.fromCallable(() -> ResponseEntity.ok(Map.of("status", true))));
     }
 
