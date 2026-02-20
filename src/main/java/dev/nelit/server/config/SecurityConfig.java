@@ -73,7 +73,7 @@ public class SecurityConfig {
             .addFilterAt(jwtWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .pathMatchers(HttpMethod.POST, "/v1/users").permitAll()
+                .pathMatchers(HttpMethod.POST, "/v1/users/**").permitAll()
 
                 .pathMatchers("/v1/events/**").authenticated()
 
