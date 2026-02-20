@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS tbl_users
     xp_total               INTEGER UNSIGNED DEFAULT 0,
     balance                DECIMAL(10,2) DEFAULT 0,
     referral_code          VARCHAR(12) NOT NULL,
-    save_data              BOOLEAN DEFAULT TRUE,
+    save_data              BOOLEAN NOT NULL DEFAULT TRUE,
 
     PRIMARY KEY (id_user),
     UNIQUE (referral_code),

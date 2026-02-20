@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
             .flatMap(tgData ->
                 userRepository.getUserByIdUserTelegramData(tgData.getIdUserTelegramData())
                     .flatMap(user -> {
-                        if (!Objects.equals(user.getSaveData(), dto.getSaveData())) {
+                        if (!Objects.equals(user.getSaveData(), dto.getSaveData()) && dto.getSaveData() != null) {
                             user.setSaveData(dto.getSaveData());
                             return userRepository.save(user);
                         }
