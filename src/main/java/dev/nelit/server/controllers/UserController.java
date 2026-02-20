@@ -2,6 +2,7 @@ package dev.nelit.server.controllers;
 
 
 import dev.nelit.server.dto.user.UserInitRequestDTO;
+import dev.nelit.server.dto.user.UserUpsertAppDTO;
 import dev.nelit.server.dto.user.UserUpsertDTO;
 import dev.nelit.server.security.TelegramUserDetails;
 import dev.nelit.server.services.auth.TelegramAuthServiceImpl;
@@ -49,7 +50,7 @@ public class UserController {
         ));
     }
 
-    @PostMapping
+    @PostMapping("/bot")
     public Mono<ResponseEntity<Map<String, Object>>> upsertUser(@RequestBody UserUpsertDTO dto) {
         return userService.upsertUser(dto) 
             .map(userResponse -> ResponseEntity.ok(
@@ -58,5 +59,16 @@ public class UserController {
                     "user", userResponse
                 ))
             );
+    }
+
+    @PostMapping("/app")
+    public Mono<ResponseEntity<Map<String, Object>>> upsertUser(@RequestBody UserUpsertAppDTO dto) {
+        return userService.upsertUser(dto)
+            .map(userResponse -> ResponseEntity.ok(
+                Map.of(
+                    "status", true,
+                    "user", userResponse
+                )
+            ));
     }
 }
