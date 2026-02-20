@@ -115,7 +115,7 @@ public class EventServiceImpl implements EventService {
                     eventRuleRepository.findByIdEvent(eventID).collectList(),
                     eventProgramRepository.findByIdEvent(eventID).collectList(),
                     eventMemberRepository.existsEventMemberByIdEventAndIdUser(eventID, userID).defaultIfEmpty(false),
-                    eventMemberRepository.countEventMemberByIdEventAndIdUser(eventID, userID).defaultIfEmpty(0)
+                    eventMemberRepository.countEventMemberByIdEvent(eventID).defaultIfEmpty(0)
                 ).flatMap(tuple -> {
                     EventLocation location = tuple.getT1();
                     List<EventData> data = tuple.getT2();
