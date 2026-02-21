@@ -19,8 +19,14 @@ public class EventMemberDataDTO {
     @JsonProperty("equipment")
     private EquipmentTypes equipment;
 
+    @JsonProperty("registered")
+    private Boolean registered;
+
     @JsonProperty("registration_timestamp")
     private LocalDateTime registrationTimestamp;
+
+    @JsonProperty("update_timestamp")
+    private LocalDateTime updateTimestamp;
 
     public EventMemberDataDTO() {
     }
@@ -57,11 +63,27 @@ public class EventMemberDataDTO {
         this.equipment = equipment;
     }
 
+    public Boolean getRegistered() {
+        return registered;
+    }
+
+    public void setRegistered(Boolean registered) {
+        this.registered = registered;
+    }
+
     public LocalDateTime getRegistrationTimestamp() {
         return registrationTimestamp;
     }
 
     public void setRegistrationTimestamp(LocalDateTime registrationTimestamp) {
         this.registrationTimestamp = registrationTimestamp;
+    }
+
+    public LocalDateTime getUpdateTimestamp() {
+        return updateTimestamp;
+    }
+
+    public void setUpdateTimestamp(LocalDateTime updateTimestamp) {
+        this.updateTimestamp = updateTimestamp;
     }
 }

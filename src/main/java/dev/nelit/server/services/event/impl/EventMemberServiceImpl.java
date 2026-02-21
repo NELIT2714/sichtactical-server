@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
+
 @Service
 public class EventMemberServiceImpl implements EventMemberService {
 
@@ -35,22 +39,35 @@ public class EventMemberServiceImpl implements EventMemberService {
 
     @Override
     public Mono<Void> signUp(Event event, User user, EventSignUpDTO dto) {
-        return tx.transactional(eventMemberRepository.save(new EventMember(
-                event.getIdEvent(),
-                user.getIdUser(),
-                dto.getFullName(),
-                dto.getCallSign().isBlank() ? null : dto.getCallSign(),
-                dto.getPhoneNumber(),
-                dto.getEquipmentType()
-            )))
-            .onErrorMap(DuplicateKeyException.class,
+        return tx.transactional(
+            eventMemberRepository.getEventMemberByIdEventAndIdUser(event.getIdEvent(), user.getIdUser())
+                .flatMap(member -> {
+                    member.setRegistered(true);
+                    return eventMemberRepository.save(member);
+                })
+                .switchIfEmpty(eventMemberRepository.save(new EventMember(
+                    event.getIdEvent(),
+                    user.getIdUser(),
+                    dto.getFullName(),
+                    dto.getCallSign().isBlank() ? null : dto.getCallSign(),
+                    dto.getPhoneNumber(),
+                    dto.getEquipmentType()
+                )))
+                .onErrorMap(DuplicateKeyException.class,
                 ex -> new HTTPException(HttpStatus.CONFLICT, "User is already signed up for this event")
-            )
-            .then();
+                )
+                .then()
+        );
     }
 
     @Override
     public Mono<Void> signOut(int eventID, int userID) {
-        return eventMemberRepository.deleteByIdEventAndIdUser(eventID, userID);
+        return eventMemberRepository.getEventMemberByIdEventAndIdUser(eventID, userID)
+            .flatMap(user -> {
+                user.setRegistered(false);
+                user.setUpdateTimestamp(LocalDateTime.now(ZoneId.of("Europe/Warsaw")));
+                return eventMemberRepository.save(user);
+            })
+            .then();
     }
 }

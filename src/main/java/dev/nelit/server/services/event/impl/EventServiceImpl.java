@@ -106,7 +106,6 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Mono<EventResponseDTO> getEventResponse(int eventID, Integer userID) {
-
         return eventRepository.findById(eventID)
             .flatMap(event ->
                 Mono.zip(
@@ -114,8 +113,8 @@ public class EventServiceImpl implements EventService {
                     eventDataRepository.findByIdEvent(eventID).collectList(),
                     eventRuleRepository.findByIdEvent(eventID).collectList(),
                     eventProgramRepository.findByIdEvent(eventID).collectList(),
-                    eventMemberRepository.existsEventMemberByIdEventAndIdUser(eventID, userID).defaultIfEmpty(false),
-                    eventMemberRepository.countEventMemberByIdEvent(eventID).defaultIfEmpty(0)
+                    eventMemberRepository.existsEventMemberByIdEventAndIdUserAndRegisteredIsTrue(eventID, userID).defaultIfEmpty(false),
+                    eventMemberRepository.countEventMemberByIdEventAndRegisteredIsTrue(eventID).defaultIfEmpty(0)
                 ).flatMap(tuple -> {
                     EventLocation location = tuple.getT1();
                     List<EventData> data = tuple.getT2();

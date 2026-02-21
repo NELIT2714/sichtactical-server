@@ -41,9 +41,17 @@ public class EventMember {
     @Column("equipment")
     private EquipmentTypes equipment;
 
+    @JsonProperty("registered")
+    @Column("registered")
+    private Boolean registered;
+
     @JsonProperty("registration_timestamp")
     @Column("registration_timestamp")
     private LocalDateTime registrationTimestamp;
+
+    @JsonProperty("update_timestamp")
+    @Column("update_timestamp")
+    private LocalDateTime updateTimestamp;
 
     public EventMember(Integer idEvent, Integer idUser, String fullName, String callSign, String phoneNumber, EquipmentTypes equipment) {
         this.idEvent = idEvent;
@@ -107,11 +115,27 @@ public class EventMember {
         this.equipment = equipment;
     }
 
+    public Boolean getRegistered() {
+        return registered;
+    }
+
+    public void setRegistered(Boolean registered) {
+        this.registered = registered;
+    }
+
     public LocalDateTime getRegistrationTimestamp() {
         return registrationTimestamp;
     }
 
     public void setRegistrationTimestamp(LocalDateTime registrationTimestamp) {
         this.registrationTimestamp = registrationTimestamp;
+    }
+
+    public LocalDateTime getUpdateTimestamp() {
+        return updateTimestamp;
+    }
+
+    public void setUpdateTimestamp(LocalDateTime updateTimestamp) {
+        this.updateTimestamp = updateTimestamp;
     }
 }

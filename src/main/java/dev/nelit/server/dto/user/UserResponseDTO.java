@@ -1,5 +1,6 @@
 package dev.nelit.server.dto.user;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.dto.event.EventMemberDataDTO;
 
@@ -32,6 +33,7 @@ public class UserResponseDTO {
     private Boolean saveData;
 
     @JsonProperty("last_data")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private EventMemberDataDTO lastData;
 
     public UserResponseDTO() {

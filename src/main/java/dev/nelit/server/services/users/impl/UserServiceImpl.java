@@ -63,9 +63,14 @@ public class UserServiceImpl implements UserService {
                 userRepository.getUserByIdUserTelegramData(userTelegramData.getIdUserTelegramData())
                     .flatMap(user -> {
                         UserResponseDTO response = UserMapper.toResponseDTO(user, userTelegramData);
+                        if (!user.getSaveData()) return Mono.just(response);
+
                         return eventMemberService.getLastMemberData(user.getIdUser())
-                            .doOnNext(response::setLastData)
-                            .thenReturn(response);
+                            .flatMap(lastData -> {
+                                response.setLastData(lastData);
+                                return Mono.just(response);
+                            })
+                            .switchIfEmpty(Mono.just(response));
                     })
             );
     }

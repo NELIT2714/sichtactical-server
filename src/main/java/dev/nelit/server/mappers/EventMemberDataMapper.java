@@ -12,9 +12,11 @@ public final class EventMemberDataMapper {
         EventMemberDataDTO response = new EventMemberDataDTO();
         response.setFullName(member.getFullName());
         response.setCallSign(member.getCallSign());
-        response.setPhoneNumber(member.getCallSign());
+        response.setPhoneNumber(member.getPhoneNumber());
         response.setEquipment(member.getEquipment());
+        response.setRegistered(member.getRegistered());
         response.setRegistrationTimestamp(member.getRegistrationTimestamp());
+        response.setUpdateTimestamp(member.getUpdateTimestamp());
         return response;
     }
 }
