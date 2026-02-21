@@ -1,6 +1,7 @@
 package dev.nelit.server.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.nelit.server.dto.event.EventMemberDataDTO;
 
 import java.math.BigDecimal;
 
@@ -29,6 +30,9 @@ public class UserResponseDTO {
 
     @JsonProperty("save_data")
     private Boolean saveData;
+
+    @JsonProperty("last_data")
+    private EventMemberDataDTO lastData;
 
     public UserResponseDTO() {
     }
@@ -95,5 +99,13 @@ public class UserResponseDTO {
 
     public void setSaveData(Boolean saveData) {
         this.saveData = saveData;
+    }
+
+    public EventMemberDataDTO getLastData() {
+        return lastData;
+    }
+
+    public void setLastData(EventMemberDataDTO lastData) {
+        this.lastData = lastData;
     }
 }

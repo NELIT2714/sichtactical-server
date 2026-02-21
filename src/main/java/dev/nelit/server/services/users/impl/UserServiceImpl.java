@@ -6,6 +6,7 @@ import dev.nelit.server.entity.user.User;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.UserMapper;
 import dev.nelit.server.repositories.user.UserRepository;
+import dev.nelit.server.services.event.impl.EventMemberServiceImpl;
 import dev.nelit.server.services.referral.ReferralServiceImpl;
 import dev.nelit.server.services.users.api.UserService;
 import org.springframework.http.HttpStatus;
@@ -21,13 +22,15 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserTelegramDataServiceImpl telegramDataService;
     private final ReferralServiceImpl referralService;
+    private final EventMemberServiceImpl eventMemberService;
 
     private final TransactionalOperator tx;
 
-    public UserServiceImpl(UserRepository userRepository, UserTelegramDataServiceImpl telegramDataService, ReferralServiceImpl referralService, TransactionalOperator tx) {
+    public UserServiceImpl(UserRepository userRepository, UserTelegramDataServiceImpl telegramDataService, ReferralServiceImpl referralService, EventMemberServiceImpl eventMemberService, TransactionalOperator tx) {
         this.userRepository = userRepository;
         this.telegramDataService = telegramDataService;
         this.referralService = referralService;
+        this.eventMemberService = eventMemberService;
         this.tx = tx;
     }
 
@@ -54,11 +57,16 @@ public class UserServiceImpl implements UserService {
             ));
     }
 
-    @Override
     public Mono<UserResponseDTO> getUserResponse(String telegramID) {
         return telegramDataService.getUserByTelegramID(telegramID)
             .flatMap(userTelegramData ->
                 userRepository.getUserByIdUserTelegramData(userTelegramData.getIdUserTelegramData())
-                    .map(user -> UserMapper.toResponseDTO(user, userTelegramData)));
+                    .flatMap(user -> {
+                        UserResponseDTO response = UserMapper.toResponseDTO(user, userTelegramData);
+                        return eventMemberService.getLastMemberData(user.getIdUser())
+                            .doOnNext(response::setLastData)
+                            .thenReturn(response);
+                    })
+            );
     }
 }

@@ -15,4 +15,6 @@ public interface EventMemberRepository extends ReactiveCrudRepository<EventMembe
     Mono<Integer> countEventMemberByIdEvent(Integer idEvent);
 
     Mono<Void> deleteByIdEventAndIdUser(Integer idEvent, Integer idUser);
+
+    Mono<EventMember> findFirstByIdUserOrderByIdEventMember(Integer idUser);
 }
