@@ -23,16 +23,24 @@ import dev.nelit.server.repositories.event.rule.EventRuleI18nRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleRepository;
 import dev.nelit.server.services.event.api.*;
 import dev.nelit.server.services.users.impl.UserServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
 public class EventServiceImpl implements EventService {
+
+    @Value("${app.timezone:UTC}")
+    private String timezone;
 
     private final EventRepository eventRepository;
     private final EventLocationRepository eventLocationRepository;
@@ -85,7 +93,7 @@ public class EventServiceImpl implements EventService {
         int offset = page * size;
 
         Mono<Long> totalMono = eventRepository.countAll();
-        Flux<Event> eventsFlux = eventRepository.findAllPaged(size, offset);
+        Flux<Event> eventsFlux = eventRepository.findAllPaged(LocalDate.now(ZoneId.of(timezone)), size, offset);
 
         return totalMono
             .zipWith(eventsFlux.concatMap(event -> getEventResponse(event.getIdEvent(), userID)).collectList())
@@ -97,6 +105,12 @@ public class EventServiceImpl implements EventService {
 
                 return new EventPageResponseDTO(content, totalElements, totalPages, page, size);
             });
+    }
+
+    @Override
+    public Mono<EventResponseDTO> getNearestEvent(int userID) {
+        return eventRepository.findNearestUpcoming(LocalDate.now(ZoneId.of(timezone)), LocalTime.now(ZoneId.of(timezone)))
+            .flatMap(event -> getEventResponse(event.getIdEvent(), userID));
     }
 
     @Override

@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS tbl_events_members
     full_name                   VARCHAR(150) NOT NULL,
     call_sign                   VARCHAR(20),
     phone_number                VARCHAR(16) NOT NULL,
-    equipment                   ENUM('OWN', 'RENT') NOT NULL,
+    equipment                   VARCHAR(10) NOT NULL,
     registered                  BOOLEAN NOT NULL DEFAULT TRUE,
     registration_timestamp      DATETIME NOT NULL,
     update_timestamp            DATETIME DEFAULT NULL,

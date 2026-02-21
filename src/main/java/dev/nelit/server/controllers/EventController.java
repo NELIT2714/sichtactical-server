@@ -31,6 +31,12 @@ public class EventController {
             .map(response -> ResponseEntity.ok(Map.of("status", true, "response", response)));
     }
 
+    @GetMapping("/nearest")
+    public Mono<ResponseEntity<Map<String, Object>>> getNearestEvent(@AuthenticationPrincipal TelegramUserDetails user) {
+        return eventService.getNearestEvent(user.getUser().getIdUser())
+            .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
+    }
+
     @GetMapping("/{eventID}")
     public Mono<ResponseEntity<Map<String, Object>>> getEvent(@AuthenticationPrincipal TelegramUserDetails user, @PathVariable int eventID) {
         return eventService.getEventResponse(eventID, user.getUser().getIdUser())

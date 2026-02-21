@@ -41,3 +41,6 @@ bot:
 jwt:
   secret: ${JWT_TOKEN_SECRET}
   token-expiration-minutes: ${JWT_TOKEN_EXPIRATION_MIN}
+
+app:
+  timezone: ${APP_TIMEZONE}
