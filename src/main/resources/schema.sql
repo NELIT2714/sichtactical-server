@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS tbl_events_locations
 CREATE TABLE IF NOT EXISTS tbl_events
 (
     id_event      INTEGER UNSIGNED AUTO_INCREMENT NOT NULL,
+    registration  BOOLEAN NOT NULL DEFAULT TRUE,
     event_date    DATE NOT NULL,
     start_time    TIME NOT NULL,
     end_time      TIME NOT NULL,

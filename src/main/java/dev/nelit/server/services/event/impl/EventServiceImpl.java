@@ -159,8 +159,11 @@ public class EventServiceImpl implements EventService {
     @Override
     public Mono<Void> signUp(int eventID, int userID, EventSignUpDTO eventSignUpDTO) {
         return tx.transactional(getEvent(eventID)
-            .flatMap(event -> userService.getUser(userID)
-                .flatMap(user -> eventMemberService.signUp(event, user, eventSignUpDTO)))
+            .flatMap(event -> {
+                if (!event.getRegistration()) return Mono.error(new HTTPException(HttpStatus.FORBIDDEN, "Registration is not open for this event"));
+                return userService.getUser(userID)
+                    .flatMap(user -> eventMemberService.signUp(event, user, eventSignUpDTO));
+            })
             .then());
     }
 

@@ -13,6 +13,9 @@ public class EventResponseDTO {
     @JsonProperty("id_event")
     private Integer idEvent;
 
+    @JsonProperty("registration")
+    private Boolean registration;
+
     @JsonProperty("event_date")
     private LocalDate eventDate;
 
@@ -52,6 +55,14 @@ public class EventResponseDTO {
 
     public void setIdEvent(Integer idEvent) {
         this.idEvent = idEvent;
+    }
+
+    public Boolean getRegistration() {
+        return registration;
+    }
+
+    public void setRegistration(Boolean registration) {
+        this.registration = registration;
     }
 
     public LocalDate getEventDate() {

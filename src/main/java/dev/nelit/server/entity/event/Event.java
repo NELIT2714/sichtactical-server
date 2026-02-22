@@ -18,6 +18,10 @@ public class Event {
     @Column("id_event")
     private Integer idEvent;
 
+    @JsonProperty("registration")
+    @Column("registration")
+    private Boolean registration;
+
     @JsonProperty("event_date")
     @Column("event_date")
     private LocalDate eventDate;
@@ -53,6 +57,14 @@ public class Event {
 
     public Integer getIdEvent() {
         return idEvent;
+    }
+
+    public Boolean getRegistration() {
+        return registration;
+    }
+
+    public void setRegistration(Boolean registration) {
+        this.registration = registration;
     }
 
     public LocalDate getEventDate() {

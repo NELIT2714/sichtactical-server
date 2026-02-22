@@ -24,6 +24,7 @@ public final class EventMapper {
 
         EventResponseDTO response = new EventResponseDTO();
         response.setIdEvent(event.getIdEvent());
+        response.setRegistration(event.getRegistration());
         response.setEventDate(event.getEventDate());
         response.setStartTime(event.getStartTime());
         response.setEndTime(event.getEndTime());
