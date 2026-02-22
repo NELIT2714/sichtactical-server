@@ -21,18 +21,25 @@ public class ReferralServiceImpl implements ReferralService {
 
     @Override
     public Mono<String> generate() {
-        return Mono.defer(() -> {
-            String code = generateCode();
-            return userRepository.existsByReferralCode(code)
-                .flatMap(exists -> exists ? generate() : Mono.just(code));
-        });
+        return Mono.fromSupplier(this::generateCode).flatMap(this::ensureUnique);
+    }
+
+    private Mono<String> ensureUnique(String code) {
+        return userRepository.existsByReferralCode(code)
+            .flatMap(exists -> {
+                if (!exists) return Mono.just(code);
+                return generate();
+            });
     }
 
     private String generateCode() {
         StringBuilder sb = new StringBuilder(CODE_LENGTH);
+
         for (int i = 0; i < CODE_LENGTH; i++) {
-            sb.append(ALPHANUM.charAt(SECURE_RANDOM.nextInt(ALPHANUM.length())));
+            int index = SECURE_RANDOM.nextInt(ALPHANUM.length());
+            sb.append(ALPHANUM.charAt(index));
         }
+
         return sb.toString();
     }
 }

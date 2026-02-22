@@ -9,6 +9,7 @@ import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.EventMemberDataMapper;
 import dev.nelit.server.repositories.event.EventMemberRepository;
 import dev.nelit.server.services.event.api.EventMemberService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ import java.util.Objects;
 
 @Service
 public class EventMemberServiceImpl implements EventMemberService {
+
+    @Value("${app.timezone}")
+    private String timezone;
 
     private final EventMemberRepository eventMemberRepository;
 
@@ -42,7 +46,10 @@ public class EventMemberServiceImpl implements EventMemberService {
         return tx.transactional(
             eventMemberRepository.getEventMemberByIdEventAndIdUser(event.getIdEvent(), user.getIdUser())
                 .flatMap(member -> {
+                    // Обновить полностью юзера
                     member.setRegistered(true);
+                    member.setEquipment(dto.getEquipmentType());
+                    member.setUpdateTimestamp(LocalDateTime.now(ZoneId.of(timezone)));
                     return eventMemberRepository.save(member);
                 })
                 .switchIfEmpty(eventMemberRepository.save(new EventMember(
@@ -63,10 +70,10 @@ public class EventMemberServiceImpl implements EventMemberService {
     @Override
     public Mono<Void> signOut(int eventID, int userID) {
         return eventMemberRepository.getEventMemberByIdEventAndIdUser(eventID, userID)
-            .flatMap(user -> {
-                user.setRegistered(false);
-                user.setUpdateTimestamp(LocalDateTime.now(ZoneId.of("Europe/Warsaw")));
-                return eventMemberRepository.save(user);
+            .flatMap(member -> {
+                member.setRegistered(false);
+                member.setUpdateTimestamp(LocalDateTime.now(ZoneId.of(timezone)));
+                return eventMemberRepository.save(member);
             })
             .then();
     }

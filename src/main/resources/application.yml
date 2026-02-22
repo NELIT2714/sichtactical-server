@@ -43,4 +43,4 @@ jwt:
   token-expiration-minutes: ${JWT_TOKEN_EXPIRATION_MIN}
 
 app:
-  timezone: ${APP_TIMEZONE}
+  timezone: ${APP_TIMEZONE:UTC}
