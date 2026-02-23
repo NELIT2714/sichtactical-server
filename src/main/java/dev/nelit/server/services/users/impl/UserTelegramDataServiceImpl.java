@@ -1,5 +1,6 @@
 package dev.nelit.server.services.users.impl;
 
+import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.dto.user.UserUpsertDTO;
 import dev.nelit.server.entity.user.UserTelegramData;
 import dev.nelit.server.exceptions.HTTPException;
@@ -23,8 +24,8 @@ public class UserTelegramDataServiceImpl implements UserTelegramDataService {
     }
 
     @Override
-    public Flux<String> getAllTelegramIds() {
-        return userTelegramDataRepository.findAllTelegramIds();
+    public Flux<UserTelegramIdAndLanguageCodeDTO> getAllTelegramIds() {
+        return userTelegramDataRepository.findAllTelegramIdsAndLanguageCode();
     }
 
     @Override

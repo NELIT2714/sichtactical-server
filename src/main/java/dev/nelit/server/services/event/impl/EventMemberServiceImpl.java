@@ -45,22 +45,27 @@ public class EventMemberServiceImpl implements EventMemberService {
         return tx.transactional(
             eventMemberRepository.getEventMemberByIdEventAndIdUser(event.getIdEvent(), user.getIdUser())
                 .flatMap(member -> {
-                    // Обновить полностью юзера
+                    if (Boolean.TRUE.equals(member.getRegistered())) {
+                        return Mono.error(new HTTPException(HttpStatus.CONFLICT, "User is already signed up for this event"));
+                    }
                     member.setRegistered(true);
+                    member.setFullName(dto.getFullName());
+                    member.setCallSign(dto.getCallSign() != null && !dto.getCallSign().isBlank() ? dto.getCallSign() : null);
+                    member.setPhoneNumber(dto.getPhoneNumber());
                     member.setEquipment(dto.getEquipmentType());
                     member.setUpdateTimestamp(LocalDateTime.now(ZoneId.of(timezone)));
                     return eventMemberRepository.save(member);
                 })
-                .switchIfEmpty(eventMemberRepository.save(new EventMember(
+                .switchIfEmpty(Mono.defer(() -> eventMemberRepository.save(new EventMember(
                     event.getIdEvent(),
                     user.getIdUser(),
                     dto.getFullName(),
-                    dto.getCallSign().isBlank() ? null : dto.getCallSign(),
+                    dto.getCallSign() != null && !dto.getCallSign().isBlank() ? dto.getCallSign() : null,
                     dto.getPhoneNumber(),
                     dto.getEquipmentType()
-                )))
+                ))))
                 .onErrorMap(DuplicateKeyException.class,
-                ex -> new HTTPException(HttpStatus.CONFLICT, "User is already signed up for this event")
+                    ex -> new HTTPException(HttpStatus.CONFLICT, "User is already signed up for this event")
                 )
                 .then()
         );

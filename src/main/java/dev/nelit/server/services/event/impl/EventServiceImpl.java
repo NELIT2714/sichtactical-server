@@ -2,6 +2,7 @@ package dev.nelit.server.services.event.impl;
 
 import dev.nelit.server.components.MessageProvider;
 import dev.nelit.server.dto.event.*;
+import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
 import dev.nelit.server.entity.event.EventLocation;
@@ -272,7 +273,7 @@ public class EventServiceImpl implements EventService {
             .zipWith(telegramDataService.getAllTelegramIds().collectList())
             .flatMap(tuple -> {
                 Map<String, NotificationDataDTO> localized = tuple.getT1();
-                List<String> userIds = tuple.getT2();
+                List<UserTelegramIdAndLanguageCodeDTO> users = tuple.getT2();
 
                 NotificationUpsertDTO notificationDTO = new NotificationUpsertDTO(NotificationCategories.EVENT, localized);
 
@@ -284,7 +285,7 @@ public class EventServiceImpl implements EventService {
                                 "notifications.event",
                                 Map.of(
                                     "notification", NotificationMapper.toResponseDTO(notification, i18nList),
-                                    "user_ids", userIds
+                                    "users", users
                                 )
                             ))
                     );

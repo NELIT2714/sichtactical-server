@@ -1,5 +1,6 @@
 package dev.nelit.server.repositories.user;
 
+import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.entity.user.UserTelegramData;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -13,6 +14,6 @@ public interface UserTelegramDataRepository extends ReactiveCrudRepository<UserT
 
     Mono<Boolean> existsByTelegramId(String telegramId);
 
-    @Query("SELECT telegram_id FROM tbl_users_telegram_data")
-    Flux<String> findAllTelegramIds();
+    @Query("SELECT telegram_id, language_code FROM tbl_users_telegram_data")
+    Flux<UserTelegramIdAndLanguageCodeDTO> findAllTelegramIdsAndLanguageCode();
 }

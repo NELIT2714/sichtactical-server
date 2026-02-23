@@ -1,5 +1,6 @@
 package dev.nelit.server.services.users.api;
 
+import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.dto.user.UserUpsertDTO;
 import dev.nelit.server.entity.user.UserTelegramData;
 import reactor.core.publisher.Flux;
@@ -10,5 +11,5 @@ public interface UserTelegramDataService {
 
     Mono<UserTelegramData> getUserByTelegramID(String telegramID);
 
-    Flux<String> getAllTelegramIds();
+    Flux<UserTelegramIdAndLanguageCodeDTO> getAllTelegramIds();
 }
