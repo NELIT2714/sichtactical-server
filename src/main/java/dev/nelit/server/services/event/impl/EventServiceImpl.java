@@ -23,6 +23,15 @@ import dev.nelit.server.repositories.event.rule.EventRuleI18nRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleRepository;
 import dev.nelit.server.services.event.api.*;
 import dev.nelit.server.services.users.impl.UserServiceImpl;
+import dev.nelit.server.services.notification.NotificationService;
+import dev.nelit.server.dto.notification.NotificationUpsertDTO;
+import dev.nelit.server.dto.notification.NotificationDataDTO;
+import dev.nelit.server.enums.NotificationCategories;
+
+import reactor.util.function.Tuples;
+import reactor.util.function.Tuple2;
+
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,7 +40,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -57,6 +65,7 @@ public class EventServiceImpl implements EventService {
     private final EventProgramService eventProgramService;
     private final EventMemberServiceImpl eventMemberService;
     private final UserServiceImpl userService;
+    private final NotificationService notificationService;
 
     private final TransactionalOperator tx;
 
@@ -70,7 +79,7 @@ public class EventServiceImpl implements EventService {
                             EventLocationService eventLocationService,
                             EventDataService eventDataService,
                             EventRuleService eventRuleService,
-                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserServiceImpl userServiceImpl, TransactionalOperator tx) {
+                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserServiceImpl userServiceImpl, NotificationService notificationService, TransactionalOperator tx) {
         this.eventRepository = eventRepository;
         this.eventLocationRepository = eventLocationRepository;
         this.eventDataRepository = eventDataRepository;
@@ -85,6 +94,7 @@ public class EventServiceImpl implements EventService {
         this.eventProgramService = eventProgramService;
         this.eventMemberService = eventMemberService;
         this.userService = userServiceImpl;
+        this.notificationService = notificationService;
         this.tx = tx;
     }
 
@@ -176,10 +186,10 @@ public class EventServiceImpl implements EventService {
     public Mono<Integer> upsertEvent(EventUpsertDTO dto) {
         return tx.transactional(eventLocationService.upsertLocation(dto.getLocation())
             .flatMap(location -> {
-                Mono<Event> eventMono;
+                Mono<Tuple2<Event, Boolean>> eventMonoWithFlag;
 
                 if (dto.getIdEvent() != null) {
-                    eventMono = eventRepository.findById(dto.getIdEvent())
+                    eventMonoWithFlag = eventRepository.findById(dto.getIdEvent())
                         .flatMap(existing -> {
                             if (dto.getEventDate() != null) {
                                 existing.setEventDate(dto.getEventDate());
@@ -199,7 +209,7 @@ public class EventServiceImpl implements EventService {
                             if (dto.getCost() != null) {
                                 existing.setCost(dto.getCost());
                             }
-                            return eventRepository.save(existing);
+                            return eventRepository.save(existing).map(e -> Tuples.of(e, false));
                         })
                         .switchIfEmpty(Mono.from(eventRepository.save(new Event(
                             dto.getEventDate(),
@@ -208,25 +218,33 @@ public class EventServiceImpl implements EventService {
                             dto.getMaxMembers(),
                             location.getIdLocation(),
                             dto.getCost()
-                        ))));
+                        ))).map(e -> Tuples.of(e, true)));
                 } else {
-                    eventMono = eventRepository.save(new Event(
+                    eventMonoWithFlag = eventRepository.save(new Event(
                         dto.getEventDate(),
                         dto.getStartTime(),
                         dto.getEndTime(),
                         dto.getMaxMembers(),
                         location.getIdLocation(),
                         dto.getCost()
-                    ));
+                    )).map(e -> Tuples.of(e, true));
                 }
 
-                return eventMono.flatMap(event ->
-                    Mono.when(
+                return eventMonoWithFlag.flatMap(tuple -> {
+                    Event event = tuple.getT1();
+                    boolean created = tuple.getT2();
+
+                    return Mono.when(
                         eventDataService.upsertEventData(event.getIdEvent(), dto.getEventData()),
                         eventRuleService.upsertEventRules(event.getIdEvent(), dto.getEventRules()),
                         eventProgramService.upsertEventProgram(event.getIdEvent(), dto.getEventProgram())
-                    ).thenReturn(event.getIdEvent())
-                );
-            }));
-    }
-}
+                    ).then(created ? notificationService.upsertNotification(
+                        new NotificationUpsertDTO(
+                            NotificationCategories.EVENT,
+                            Map.of("en", new NotificationDataDTO("New event created", null, null))
+                        )).thenReturn(event.getIdEvent()) : Mono.just(event.getIdEvent())
+                    );
+                });
+             }));
+     }
+ }

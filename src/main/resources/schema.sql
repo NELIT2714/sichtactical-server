@@ -200,7 +200,8 @@ CREATE TABLE IF NOT EXISTS tbl_notifications_i18n
     id_notification         INTEGER UNSIGNED NOT NULL,
     lang                    VARCHAR(2) NOT NULL,
     title                   VARCHAR(50) NOT NULL,
-    description             TEXT,
+    description             VARCHAR(200),
+    content                 TEXT,
 
     PRIMARY KEY (id_notification_i18n),
     UNIQUE (id_notification, lang),

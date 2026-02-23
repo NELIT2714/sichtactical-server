@@ -30,11 +30,16 @@ public class NotificationI18n {
     @Column("description")
     private String description;
 
-    public NotificationI18n(Integer idNotification, String lang, String title, String description) {
+    @JsonProperty("content")
+    @Column("content")
+    private String content;
+
+    public NotificationI18n(Integer idNotification, String lang, String title, String description, String content) {
         this.idNotification = idNotification;
         this.lang = lang;
         this.title = title;
         this.description = description;
+        this.content = content;
     }
 
     public Integer getIdNotificationI18n() {
@@ -71,5 +76,13 @@ public class NotificationI18n {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

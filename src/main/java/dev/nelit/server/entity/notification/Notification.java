@@ -15,7 +15,7 @@ public class Notification {
     @Id
     @JsonProperty("id_notification")
     @Column("id_notification")
-    private String idNotification;
+    private Integer idNotification;
 
     @JsonProperty("category")
     @Column("category")
@@ -34,7 +34,7 @@ public class Notification {
         this.createdAt = createdAt;
     }
 
-    public String getIdNotification() {
+    public Integer getIdNotification() {
         return idNotification;
     }
 
