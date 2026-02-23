@@ -8,6 +8,7 @@ import dev.nelit.server.services.users.api.UserTelegramDataService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -19,6 +20,11 @@ public class UserTelegramDataServiceImpl implements UserTelegramDataService {
     public UserTelegramDataServiceImpl(UserTelegramDataRepository userTelegramDataRepository, TransactionalOperator tx) {
         this.userTelegramDataRepository = userTelegramDataRepository;
         this.tx = tx;
+    }
+
+    @Override
+    public Flux<String> getAllTelegramIds() {
+        return userTelegramDataRepository.findAllTelegramIds();
     }
 
     @Override

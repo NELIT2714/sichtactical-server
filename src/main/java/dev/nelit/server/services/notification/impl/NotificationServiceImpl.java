@@ -1,4 +1,4 @@
-package dev.nelit.server.services.notification;
+package dev.nelit.server.services.notification.impl;
 
 import dev.nelit.server.dto.notification.NotificationDataDTO;
 import dev.nelit.server.dto.notification.NotificationUpsertDTO;
@@ -7,6 +7,7 @@ import dev.nelit.server.entity.notification.NotificationI18n;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.repositories.notification.NotificationI18nRepository;
 import dev.nelit.server.repositories.notification.NotificationRepository;
+import dev.nelit.server.services.notification.api.NotificationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Mono<Void> upsertNotification(NotificationUpsertDTO dto) {
+    public Mono<Notification> upsertNotification(NotificationUpsertDTO dto) {
         return tx.transactional(
             Mono.defer(() -> {
                 Map<String, NotificationDataDTO> notificationDataDTO = dto.getNotificationData();
@@ -51,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
                                     entry.getValue().description(),
                                     entry.getValue().content()
                                 )))
-                                .then()
+                                .then().thenReturn(notification)
                         );
                 } else {
                     return notificationRepository.findById(dto.getIdNotification())
@@ -67,12 +68,17 @@ public class NotificationServiceImpl implements NotificationService {
                                             entry.getValue().description(),
                                             entry.getValue().content()
                                         )))
-                                        .then()
+                                        .then().thenReturn(notification)
                                 )
                         );
                 }
             })
         );
+    }
+
+    @Override
+    public Flux<NotificationI18n> getNotificationI18n(int notificationID) {
+        return notificationI18nRepository.findAllByIdNotification(notificationID);
     }
 
     @Override

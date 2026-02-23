@@ -1,8 +1,9 @@
 {
-  "error.unauthorized": "Authorization required",
-  "error.forbidden": "Access denied",
-  "error.not_found": "Resource not found",
-  "error.bad_request": "Bad request",
-  "error.internal": "Internal server error"
+  "notifications": {
+    "event": {
+      "title": "Nowe wydarzenie",
+      "description": "„{{event_name}}” — rejestracja została otwarta.",
+      "content": "Wydarzenie „{{event_name}}” jest dostępne do rejestracji. Po osiągnięciu maksymalnej liczby uczestników rejestracja zostanie automatycznie zamknięta."
+    }
+  }
 }
-
