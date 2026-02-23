@@ -1,5 +1,6 @@
 package dev.nelit.server.services.event.impl;
 
+import dev.nelit.server.components.MessageProvider;
 import dev.nelit.server.dto.event.EventPageResponseDTO;
 import dev.nelit.server.dto.event.EventResponseDTO;
 import dev.nelit.server.dto.event.EventSignUpDTO;
@@ -67,6 +68,8 @@ public class EventServiceImpl implements EventService {
     private final UserServiceImpl userService;
     private final NotificationService notificationService;
 
+    private final MessageProvider messageProvider;
+
     private final TransactionalOperator tx;
 
     public EventServiceImpl(EventRepository eventRepository,
@@ -79,7 +82,7 @@ public class EventServiceImpl implements EventService {
                             EventLocationService eventLocationService,
                             EventDataService eventDataService,
                             EventRuleService eventRuleService,
-                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserServiceImpl userServiceImpl, NotificationService notificationService, TransactionalOperator tx) {
+                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserServiceImpl userServiceImpl, NotificationService notificationService, MessageProvider messageProvider, TransactionalOperator tx) {
         this.eventRepository = eventRepository;
         this.eventLocationRepository = eventLocationRepository;
         this.eventDataRepository = eventDataRepository;
@@ -95,6 +98,7 @@ public class EventServiceImpl implements EventService {
         this.eventMemberService = eventMemberService;
         this.userService = userServiceImpl;
         this.notificationService = notificationService;
+        this.messageProvider = messageProvider;
         this.tx = tx;
     }
 
@@ -238,13 +242,22 @@ public class EventServiceImpl implements EventService {
                         eventDataService.upsertEventData(event.getIdEvent(), dto.getEventData()),
                         eventRuleService.upsertEventRules(event.getIdEvent(), dto.getEventRules()),
                         eventProgramService.upsertEventProgram(event.getIdEvent(), dto.getEventProgram())
-                    ).then(created ? notificationService.upsertNotification(
-                        new NotificationUpsertDTO(
-                            NotificationCategories.EVENT,
-                            Map.of("en", new NotificationDataDTO("New event created", null, null))
-                        )).thenReturn(event.getIdEvent()) : Mono.just(event.getIdEvent())
-                    );
+                    ).then(created ? sendNotification().thenReturn(event.getIdEvent()) : Mono.just(event.getIdEvent()));
                 });
              }));
+     }
+
+     private Mono<Void> sendNotification() {
+        NotificationDataDTO notificationData = new NotificationDataDTO(
+            messageProvider.get("ru", "notifications.event.title"),
+            messageProvider.get("ru", "notifications.event.description"),
+            messageProvider.get("ru", "notifications.event.content")
+        );
+        return notificationService.upsertNotification(
+            new NotificationUpsertDTO(
+                NotificationCategories.EVENT,
+                Map.of("ru", notificationData)
+            )
+        );
      }
  }

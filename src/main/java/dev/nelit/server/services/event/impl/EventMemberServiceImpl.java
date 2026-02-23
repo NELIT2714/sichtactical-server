@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Objects;
 
 @Service
 public class EventMemberServiceImpl implements EventMemberService {
