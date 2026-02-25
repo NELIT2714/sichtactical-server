@@ -11,4 +11,6 @@ public interface NotificationI18nRepository extends ReactiveCrudRepository<Notif
     Mono<Void> deleteByIdNotification(Integer idNotification);
 
     Flux<NotificationI18n> findAllByIdNotification(Integer idNotification);
+
+    Flux<NotificationI18n> findByIdNotification(Integer idNotification);
 }

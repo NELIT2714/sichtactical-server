@@ -13,6 +13,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -60,6 +61,10 @@ public class MessageProvider {
                 return true;
             })
             .then();
+    }
+
+    public Set<String> getAvailableLanguages() {
+        return messages.keySet();
     }
 
     public Mono<String> get(String lang, String key) {

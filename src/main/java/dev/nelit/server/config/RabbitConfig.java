@@ -17,8 +17,8 @@ public class RabbitConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(RabbitConfig.class);
 
-    public static final String EXCHANGE    = "notifications.exchange";
-    public static final String QUEUE       = "notifications.queue";
+    public static final String EXCHANGE = "notifications.exchange";
+    public static final String QUEUE = "notifications.queue";
     public static final String ROUTING_KEY = "notifications.*";
 
     @Bean
@@ -32,8 +32,7 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Binding notificationsBinding(Queue notificationsQueue,
-                                        TopicExchange notificationsExchange) {
+    public Binding notificationsBinding(Queue notificationsQueue, TopicExchange notificationsExchange) {
         return BindingBuilder
             .bind(notificationsQueue)
             .to(notificationsExchange)

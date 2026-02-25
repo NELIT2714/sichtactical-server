@@ -2,8 +2,13 @@
   "notifications": {
     "event": {
       "title": "Nowe wydarzenie",
-      "description": "„{{event_name}}” — rejestracja została otwarta.",
-      "content": "Wydarzenie „{{event_name}}” jest dostępne do rejestracji. Po osiągnięciu maksymalnej liczby uczestników rejestracja zostanie automatycznie zamknięta."
+      "description": "«{{event_name}}» — rejestracja została otwarta.",
+      "content": "Wydarzenie «{{event_name}}» jest dostępne do rejestracji. Po osiągnięciu maksymalnej liczby uczestników rejestracja zostanie automatycznie zamknięta."
+    },
+    "signup": {
+      "title": "Rejestracja potwierdzona",
+      "description": "Zostałeś pomyślnie zapisany na «{{event_name}}».",
+      "content": "Twoja rejestracja na wydarzenie «{{event_name}}» została potwierdzona. Czekamy na Ciebie!"
     }
   }
 }

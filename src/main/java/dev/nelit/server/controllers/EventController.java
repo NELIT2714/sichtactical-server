@@ -24,10 +24,10 @@ public class EventController {
     @GetMapping
     public Mono<ResponseEntity<Map<String, Object>>> getEvents(
         @AuthenticationPrincipal TelegramUserDetails user,
-        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
-        return eventService.getEvents(page, size, user.getUser().getIdUser())
+        return eventService.getEvents(page - 1, size, user.getUser().getIdUser())
             .map(response -> ResponseEntity.ok(Map.of("status", true, "response", response)));
     }
 

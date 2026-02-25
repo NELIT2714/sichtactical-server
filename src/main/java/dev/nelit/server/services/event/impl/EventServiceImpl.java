@@ -2,6 +2,8 @@ package dev.nelit.server.services.event.impl;
 
 import dev.nelit.server.components.MessageProvider;
 import dev.nelit.server.dto.event.*;
+import dev.nelit.server.dto.notification.NotificationDataDTO;
+import dev.nelit.server.dto.notification.NotificationUpsertDTO;
 import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
@@ -10,6 +12,7 @@ import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
+import dev.nelit.server.enums.NotificationCategories;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.EventMapper;
 import dev.nelit.server.mappers.NotificationMapper;
@@ -23,29 +26,23 @@ import dev.nelit.server.repositories.event.rule.EventRuleI18nRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleRepository;
 import dev.nelit.server.services.event.api.*;
 import dev.nelit.server.services.notification.api.NotificationPublisherService;
+import dev.nelit.server.services.notification.api.NotificationService;
 import dev.nelit.server.services.users.api.UserService;
 import dev.nelit.server.services.users.api.UserTelegramDataService;
-import dev.nelit.server.services.users.impl.UserServiceImpl;
-import dev.nelit.server.services.notification.api.NotificationService;
-import dev.nelit.server.dto.notification.NotificationUpsertDTO;
-import dev.nelit.server.dto.notification.NotificationDataDTO;
-import dev.nelit.server.enums.NotificationCategories;
-
-import reactor.util.function.Tuples;
-import reactor.util.function.Tuple2;
-
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -123,7 +120,7 @@ public class EventServiceImpl implements EventService {
 
                 int totalPages = (int) Math.ceil((double) totalElements / size);
 
-                return new EventPageResponseDTO(content, totalElements, totalPages, page, size);
+                return new EventPageResponseDTO(content, totalElements, totalPages, page - 1, size);
             });
     }
 

@@ -1,10 +1,13 @@
 package dev.nelit.server.services.notification.impl;
 
 import dev.nelit.server.dto.notification.NotificationDataDTO;
+import dev.nelit.server.dto.notification.NotificationPageResponseDTO;
+import dev.nelit.server.dto.notification.NotificationResponseDTO;
 import dev.nelit.server.dto.notification.NotificationUpsertDTO;
 import dev.nelit.server.entity.notification.Notification;
 import dev.nelit.server.entity.notification.NotificationI18n;
 import dev.nelit.server.exceptions.HTTPException;
+import dev.nelit.server.mappers.NotificationMapper;
 import dev.nelit.server.repositories.notification.NotificationI18nRepository;
 import dev.nelit.server.repositories.notification.NotificationRepository;
 import dev.nelit.server.services.notification.api.NotificationService;
@@ -33,6 +36,41 @@ public class NotificationServiceImpl implements NotificationService {
         this.notificationRepository = notificationRepository;
         this.notificationI18nRepository = notificationI18nRepository;
         this.tx = tx;
+    }
+
+
+    @Override
+    public Mono<NotificationPageResponseDTO> getNotifications(int page, int size) {
+        int offset = page * size;
+
+        Mono<Long> totalMono = notificationRepository.count();
+        Flux<Notification> notificationFlux = notificationRepository.findAllPaged(size, offset);
+
+        Flux<NotificationResponseDTO> responseDtoFlux = notificationFlux.concatMap(notification ->
+            notificationI18nRepository.findByIdNotification(notification.getIdNotification())
+                .collectList()
+                .map(i18nList -> NotificationMapper.toResponseDTO(notification, i18nList))
+        );
+
+        return Mono.zip(totalMono, responseDtoFlux.collectList())
+            .map(tuple -> new NotificationPageResponseDTO(
+                tuple.getT2(),
+                tuple.getT1(),
+                (int) Math.ceil((double) tuple.getT1() / size),
+                page + 1,
+                size
+            ));
+    }
+
+    @Override
+    public Mono<NotificationResponseDTO> getNotificationResponse(int notificationID) {
+        return notificationRepository.findById(notificationID)
+            .switchIfEmpty(Mono.error(new HTTPException(HttpStatus.NOT_FOUND, "Notification not found: " + notificationID)))
+            .flatMap(notification ->
+                notificationI18nRepository.findByIdNotification(notification.getIdNotification())
+                    .collectList()
+                    .map(i18nList -> NotificationMapper.toResponseDTO(notification, i18nList))
+            );
     }
 
     @Override
