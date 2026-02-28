@@ -1,5 +1,6 @@
 package dev.nelit.server.services.users.impl;
 
+import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.dto.user.UserUpsertDTO;
 import dev.nelit.server.entity.user.UserTelegramData;
 import dev.nelit.server.exceptions.HTTPException;
@@ -8,6 +9,7 @@ import dev.nelit.server.services.users.api.UserTelegramDataService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -19,6 +21,11 @@ public class UserTelegramDataServiceImpl implements UserTelegramDataService {
     public UserTelegramDataServiceImpl(UserTelegramDataRepository userTelegramDataRepository, TransactionalOperator tx) {
         this.userTelegramDataRepository = userTelegramDataRepository;
         this.tx = tx;
+    }
+
+    @Override
+    public Flux<UserTelegramIdAndLanguageCodeDTO> getAllTelegramIds() {
+        return userTelegramDataRepository.findAllTelegramIdsAndLanguageCode();
     }
 
     @Override

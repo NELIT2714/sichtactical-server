@@ -28,6 +28,13 @@ spring:
 #        password: ${REDIS_PASSWORD}
 #        database: ${REDIS_DATABASE}
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
 
 cors:
   api-key: ${CORS_API_KEY}
@@ -43,4 +50,4 @@ jwt:
   token-expiration-minutes: ${JWT_TOKEN_EXPIRATION_MIN}
 
 app:
-  timezone: ${APP_TIMEZONE}
+  timezone: ${APP_TIMEZONE:UTC}

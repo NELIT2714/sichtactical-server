@@ -1,9 +1,10 @@
 package dev.nelit.server.services.event.impl;
 
-import dev.nelit.server.dto.event.EventPageResponseDTO;
-import dev.nelit.server.dto.event.EventResponseDTO;
-import dev.nelit.server.dto.event.EventSignUpDTO;
-import dev.nelit.server.dto.event.EventUpsertDTO;
+import dev.nelit.server.components.MessageProvider;
+import dev.nelit.server.dto.event.*;
+import dev.nelit.server.dto.notification.NotificationDataDTO;
+import dev.nelit.server.dto.notification.NotificationUpsertDTO;
+import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
 import dev.nelit.server.entity.event.Event;
 import dev.nelit.server.entity.event.EventData;
 import dev.nelit.server.entity.event.EventLocation;
@@ -11,8 +12,10 @@ import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
+import dev.nelit.server.enums.NotificationCategories;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.EventMapper;
+import dev.nelit.server.mappers.NotificationMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
 import dev.nelit.server.repositories.event.EventLocationRepository;
 import dev.nelit.server.repositories.event.EventMemberRepository;
@@ -22,19 +25,24 @@ import dev.nelit.server.repositories.event.program.EventProgramRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleI18nRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleRepository;
 import dev.nelit.server.services.event.api.*;
-import dev.nelit.server.services.users.impl.UserServiceImpl;
+import dev.nelit.server.services.notification.api.NotificationPublisherService;
+import dev.nelit.server.services.notification.api.NotificationService;
+import dev.nelit.server.services.users.api.UserService;
+import dev.nelit.server.services.users.api.UserTelegramDataService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EventServiceImpl implements EventService {
@@ -56,7 +64,12 @@ public class EventServiceImpl implements EventService {
     private final EventRuleService eventRuleService;
     private final EventProgramService eventProgramService;
     private final EventMemberServiceImpl eventMemberService;
-    private final UserServiceImpl userService;
+    private final UserTelegramDataService telegramDataService;
+    private final UserService userService;
+    private final NotificationService notificationService;
+
+    private final MessageProvider messageProvider;
+    private final NotificationPublisherService publisher;
 
     private final TransactionalOperator tx;
 
@@ -70,7 +83,7 @@ public class EventServiceImpl implements EventService {
                             EventLocationService eventLocationService,
                             EventDataService eventDataService,
                             EventRuleService eventRuleService,
-                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserServiceImpl userServiceImpl, TransactionalOperator tx) {
+                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserTelegramDataService telegramDataService, UserService userService, NotificationService notificationService, MessageProvider messageProvider, NotificationPublisherService publisher, TransactionalOperator tx) {
         this.eventRepository = eventRepository;
         this.eventLocationRepository = eventLocationRepository;
         this.eventDataRepository = eventDataRepository;
@@ -84,7 +97,11 @@ public class EventServiceImpl implements EventService {
         this.eventRuleService = eventRuleService;
         this.eventProgramService = eventProgramService;
         this.eventMemberService = eventMemberService;
-        this.userService = userServiceImpl;
+        this.telegramDataService = telegramDataService;
+        this.userService = userService;
+        this.notificationService = notificationService;
+        this.messageProvider = messageProvider;
+        this.publisher = publisher;
         this.tx = tx;
     }
 
@@ -103,7 +120,7 @@ public class EventServiceImpl implements EventService {
 
                 int totalPages = (int) Math.ceil((double) totalElements / size);
 
-                return new EventPageResponseDTO(content, totalElements, totalPages, page, size);
+                return new EventPageResponseDTO(content, totalElements, totalPages, page - 1, size);
             });
     }
 
@@ -176,10 +193,10 @@ public class EventServiceImpl implements EventService {
     public Mono<Integer> upsertEvent(EventUpsertDTO dto) {
         return tx.transactional(eventLocationService.upsertLocation(dto.getLocation())
             .flatMap(location -> {
-                Mono<Event> eventMono;
+                Mono<Tuple2<Event, Boolean>> eventMonoWithFlag;
 
                 if (dto.getIdEvent() != null) {
-                    eventMono = eventRepository.findById(dto.getIdEvent())
+                    eventMonoWithFlag = eventRepository.findById(dto.getIdEvent())
                         .flatMap(existing -> {
                             if (dto.getEventDate() != null) {
                                 existing.setEventDate(dto.getEventDate());
@@ -199,7 +216,7 @@ public class EventServiceImpl implements EventService {
                             if (dto.getCost() != null) {
                                 existing.setCost(dto.getCost());
                             }
-                            return eventRepository.save(existing);
+                            return eventRepository.save(existing).map(e -> Tuples.of(e, false));
                         })
                         .switchIfEmpty(Mono.from(eventRepository.save(new Event(
                             dto.getEventDate(),
@@ -208,25 +225,67 @@ public class EventServiceImpl implements EventService {
                             dto.getMaxMembers(),
                             location.getIdLocation(),
                             dto.getCost()
-                        ))));
+                        ))).map(e -> Tuples.of(e, true)));
                 } else {
-                    eventMono = eventRepository.save(new Event(
+                    eventMonoWithFlag = eventRepository.save(new Event(
                         dto.getEventDate(),
                         dto.getStartTime(),
                         dto.getEndTime(),
                         dto.getMaxMembers(),
                         location.getIdLocation(),
                         dto.getCost()
-                    ));
+                    )).map(e -> Tuples.of(e, true));
                 }
 
-                return eventMono.flatMap(event ->
-                    Mono.when(
+                return eventMonoWithFlag.flatMap(tuple -> {
+                    Event event = tuple.getT1();
+                    boolean created = tuple.getT2();
+
+                    return Mono.when(
                         eventDataService.upsertEventData(event.getIdEvent(), dto.getEventData()),
                         eventRuleService.upsertEventRules(event.getIdEvent(), dto.getEventRules()),
                         eventProgramService.upsertEventProgram(event.getIdEvent(), dto.getEventProgram())
-                    ).thenReturn(event.getIdEvent())
-                );
+                    ).then(created ? sendNotification(dto.getEventData()).thenReturn(event.getIdEvent()) : Mono.just(event.getIdEvent()));
+                });
             }));
     }
-}
+
+    private Mono<Void> sendNotification(Map<String, EventDataDTO> eventData) {
+        return Flux.fromIterable(eventData.entrySet())
+            .flatMap(entry -> {
+                String lang = entry.getKey();
+                EventDataDTO data = entry.getValue();
+                Map<String, String> params = Map.of("event_name", data.getName());
+
+                return Mono.zip(
+                    messageProvider.get(lang, "notifications.event.title"),
+                    messageProvider.get(lang, "notifications.event.description", params),
+                    messageProvider.get(lang, "notifications.event.content", params)
+                ).map(tuple -> Map.entry(
+                    lang,
+                    new NotificationDataDTO(tuple.getT1(), tuple.getT2(), tuple.getT3())
+                ));
+            })
+            .collectMap(Map.Entry::getKey, Map.Entry::getValue)
+            .zipWith(telegramDataService.getAllTelegramIds().collectList())
+            .flatMap(tuple -> {
+                Map<String, NotificationDataDTO> localized = tuple.getT1();
+                List<UserTelegramIdAndLanguageCodeDTO> users = tuple.getT2();
+
+                NotificationUpsertDTO notificationDTO = new NotificationUpsertDTO(NotificationCategories.EVENT, localized);
+
+                return notificationService.upsertNotification(notificationDTO)
+                    .flatMap(notification ->
+                        notificationService.getNotificationI18n(notification.getIdNotification())
+                            .collectList()
+                            .flatMap(i18nList -> publisher.publish(
+                                "notifications.event",
+                                Map.of(
+                                    "notification", NotificationMapper.toResponseDTO(notification, i18nList),
+                                    "users", users
+                                )
+                            ))
+                    );
+            });
+    }
+ }
