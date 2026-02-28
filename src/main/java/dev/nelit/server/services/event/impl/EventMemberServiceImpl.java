@@ -137,9 +137,8 @@ public class EventMemberServiceImpl implements EventMemberService {
 
                             return Mono.zip(
                                 messageProvider.get(lang, "notifications.signup.title"),
-                                messageProvider.get(lang, "notifications.signup.description", params),
-                                messageProvider.get(lang, "notifications.signup.content", params)
-                            ).map(t -> Map.entry(lang, new NotificationDataDTO(t.getT1(), t.getT2(), t.getT3())));
+                                messageProvider.get(lang, "notifications.signup.description", params)
+                            ).map(t -> Map.entry(lang, new NotificationDataDTO(t.getT1(), t.getT2(), null)));
                         })
                         .collectMap(Map.Entry::getKey, Map.Entry::getValue)
                         .flatMap(localized -> {
