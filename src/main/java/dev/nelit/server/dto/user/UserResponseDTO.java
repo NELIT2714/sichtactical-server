@@ -2,6 +2,7 @@ package dev.nelit.server.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.nelit.server.dto.admin.AdminResponseDTO;
 import dev.nelit.server.dto.event.EventMemberDataDTO;
 
 import java.math.BigDecimal;
@@ -35,6 +36,10 @@ public class UserResponseDTO {
     @JsonProperty("last_data")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private EventMemberDataDTO lastData;
+
+    @JsonProperty("admin_data")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private AdminResponseDTO adminData;
 
     public UserResponseDTO() {
     }
@@ -109,5 +114,13 @@ public class UserResponseDTO {
 
     public void setLastData(EventMemberDataDTO lastData) {
         this.lastData = lastData;
+    }
+
+    public AdminResponseDTO getAdminData() {
+        return adminData;
+    }
+
+    public void setAdminData(AdminResponseDTO adminData) {
+        this.adminData = adminData;
     }
 }

@@ -24,11 +24,15 @@ public class TelegramAuthServiceImpl implements TelegramAuthService {
     }
 
     @Override
-    public Mono<String> initUser(String initData, String userTelegramId) {
+    public Mono<String> initUser(String initData) {
         if (!TelegramInitDataVerifier.verify(initData, botToken))
             return Mono.error(new HTTPException(HttpStatus.FORBIDDEN, "Invalid init data"));
 
-        return userService.getUserResponse(userTelegramId)
+        String telegramUserId = TelegramInitDataVerifier.extractTelegramUserId(initData);
+        if (telegramUserId == null)
+            return Mono.error(new HTTPException(HttpStatus.BAD_REQUEST, "User data not found in init data"));
+
+        return userService.getUserResponse(telegramUserId)
             .flatMap(user -> jwtService.generateToken(user)
                 .flatMap(Mono::just));
     }

@@ -23,13 +23,45 @@ CREATE TABLE IF NOT EXISTS tbl_users
     call_sign              VARCHAR(20),
     xp_total               INTEGER UNSIGNED DEFAULT 0,
     balance                DECIMAL(10,2) DEFAULT 0,
-    referral_code          VARCHAR(12) NOT NULL,
+    referral_code          CHAR(12) NOT NULL,
     save_data              BOOLEAN NOT NULL DEFAULT TRUE,
 
     PRIMARY KEY (id_user),
+    UNIQUE (id_user_telegram_data),
     UNIQUE (referral_code),
 
     FOREIGN KEY (id_user_telegram_data) REFERENCES tbl_users_telegram_data(id_user_telegram_data)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+
+
+CREATE TABLE IF NOT EXISTS tbl_admins
+(
+    id_admin          INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_user           INTEGER UNSIGNED NOT NULL,
+
+    PRIMARY KEY (id_admin),
+    UNIQUE (id_user),
+
+    FOREIGN KEY (id_user) REFERENCES tbl_users(id_user)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+
+
+CREATE TABLE IF NOT EXISTS tbl_admins_permissions
+(
+    id_admin_permission         INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_admin                    INTEGER UNSIGNED NOT NULL,
+    permission                  VARCHAR(50) NOT NULL,
+
+    PRIMARY KEY (id_admin_permission),
+    UNIQUE (id_admin, permission),
+
+    FOREIGN KEY (id_admin) REFERENCES tbl_admins(id_admin)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );

@@ -1,7 +1,6 @@
 package dev.nelit.server.controllers;
 
 
-import dev.nelit.server.dto.user.UserInitRequestDTO;
 import dev.nelit.server.dto.user.UserUpsertAppDTO;
 import dev.nelit.server.dto.user.UserUpsertDTO;
 import dev.nelit.server.security.TelegramUserDetails;
@@ -27,11 +26,8 @@ public class UserController {
     }
 
     @PostMapping(path = "/init")
-    public Mono<ResponseEntity<Map<String, Object>>> initUser(
-        @RequestHeader("x-telegram-data") String initData,
-        @RequestBody UserInitRequestDTO userInitRequestDTO
-    ) {
-        return telegramAuthService.initUser(initData, userInitRequestDTO.userTelegramId())
+    public Mono<ResponseEntity<Map<String, Object>>> initUser(@RequestHeader("x-telegram-data") String initData) {
+        return telegramAuthService.initUser(initData)
             .map(token -> ResponseEntity.ok(
                 Map.of(
                     "status", true,

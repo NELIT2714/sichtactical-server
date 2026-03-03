@@ -1,5 +1,6 @@
 package dev.nelit.server.mappers;
 
+import dev.nelit.server.dto.admin.AdminResponseDTO;
 import dev.nelit.server.dto.user.UserResponseDTO;
 import dev.nelit.server.dto.user.UserTelegramDataResponseDTO;
 import dev.nelit.server.entity.user.User;
@@ -9,7 +10,7 @@ public final class UserMapper {
 
     private UserMapper() {}
 
-    public static UserResponseDTO toResponseDTO(User user, UserTelegramData tg) {
+    public static UserResponseDTO toResponseDTO(User user, UserTelegramData tg, AdminResponseDTO admin) {
         UserResponseDTO dto = new UserResponseDTO();
         dto.setIdUser(user.getIdUser());
         dto.setIdUserTelegramData(tg.getIdUserTelegramData());
@@ -19,6 +20,9 @@ public final class UserMapper {
         dto.setReferralCode(user.getReferralCode());
         dto.setTelegramData(toTelegramDTO(tg));
         dto.setSaveData(user.getSaveData());
+
+        if (admin != null) dto.setAdminData(admin);
+
         return dto;
     }
 

@@ -12,7 +12,7 @@ import dev.nelit.server.entity.event.EventMember;
 import dev.nelit.server.entity.user.User;
 import dev.nelit.server.enums.NotificationCategories;
 import dev.nelit.server.exceptions.HTTPException;
-import dev.nelit.server.mappers.EventMemberDataMapper;
+import dev.nelit.server.mappers.event.EventMemberDataMapper;
 import dev.nelit.server.mappers.NotificationMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
 import dev.nelit.server.repositories.event.EventMemberRepository;

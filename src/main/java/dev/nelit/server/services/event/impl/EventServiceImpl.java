@@ -14,7 +14,7 @@ import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
 import dev.nelit.server.enums.NotificationCategories;
 import dev.nelit.server.exceptions.HTTPException;
-import dev.nelit.server.mappers.EventMapper;
+import dev.nelit.server.mappers.event.EventMapper;
 import dev.nelit.server.mappers.NotificationMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
 import dev.nelit.server.repositories.event.EventLocationRepository;

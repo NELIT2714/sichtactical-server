@@ -1,4 +1,4 @@
-package dev.nelit.server.mappers;
+package dev.nelit.server.mappers.event;
 
 import dev.nelit.server.dto.event.*;
 import dev.nelit.server.entity.event.Event;

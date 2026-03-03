@@ -1,6 +1,9 @@
 package dev.nelit.server.utils;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -62,6 +65,20 @@ public final class TelegramInitDataVerifier {
             sb.append(String.format("%02x", b & 0xff));
         }
         return sb.toString();
+    }
+
+    public static String extractTelegramUserId(String initData) {
+        if (initData == null || initData.isBlank()) return null;
+        Map<String, String> params = parseParams(initData);
+        String userJson = params.get("user");
+        if (userJson == null || userJson.isBlank()) return null;
+        try {
+            JsonNode node = new ObjectMapper().readTree(userJson);
+            JsonNode idNode = node.get("id");
+            return idNode != null ? idNode.asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static Map<String, String> parseParams(String query) {
