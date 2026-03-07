@@ -4,14 +4,16 @@ import dev.nelit.server.dto.admin.AdminResponseDTO;
 import dev.nelit.server.entity.admin.Admin;
 import dev.nelit.server.entity.admin.AdminPermission;
 import dev.nelit.server.enums.AdminPermissions;
+import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.repositories.admin.AdminRepository;
 import dev.nelit.server.services.admin.api.AdminPermissionService;
 import dev.nelit.server.services.admin.api.AdminService;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,11 +31,25 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public Mono<AdminResponseDTO> getAdminResponse(int userID) {
         return adminRepository.findByIdUser(userID)
+            .switchIfEmpty(Mono.error(() -> new HTTPException(HttpStatus.NOT_FOUND, "Admin not found")))
             .flatMap(admin -> adminPermissionService.getPermissions(admin.getIdAdmin())
                 .map(permissions -> new AdminResponseDTO(
                     admin.getIdAdmin(),
+                    admin.getIdUser(),
                     permissions.stream().map(AdminPermission::getPermission).collect(Collectors.toSet())
                 )));
+    }
+
+    @Override
+    public Mono<List<AdminResponseDTO>> getAdmins() {
+        return adminRepository.findAll().flatMap(admin -> getAdminResponse(admin.getIdUser())).collectList();
+    }
+
+    @Override
+    public Mono<AdminResponseDTO> getAdmin(int adminID) {
+        return adminRepository.findByIdAdmin(adminID)
+            .switchIfEmpty(Mono.error(() -> new HTTPException(HttpStatus.NOT_FOUND, "Admin not found")))
+            .flatMap(admin -> getAdminResponse(admin.getIdUser()));
     }
 
     @Override

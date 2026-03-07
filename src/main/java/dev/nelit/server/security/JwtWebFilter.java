@@ -2,8 +2,9 @@ package dev.nelit.server.security;
 
 import dev.nelit.server.services.jwt.JwtServiceImpl;
 import dev.nelit.server.services.users.impl.UserServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -12,10 +13,13 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class JwtWebFilter implements WebFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtWebFilter.class);
 
     private final JwtServiceImpl jwtService;
     private final UserServiceImpl userService;
@@ -42,25 +46,38 @@ public class JwtWebFilter implements WebFilter {
                         jwtService.isTokenValid(jwt, user)
                             .flatMap(valid -> {
                                 if (!valid) {
+                                    log.warn("Token is invalid for user {}", telegramId);
                                     return chain.filter(exchange);
                                 }
 
-                                var userDetails = new TelegramUserDetails(user, List.of("ROLE_USER"));
+                                return jwtService.extractPermissions(jwt)
+                                    .flatMap(permissions -> {
+                                        List<String> authorities = new ArrayList<>();
+                                        authorities.add("ROLE_USER");
+                                        permissions.forEach(p -> authorities.add("PERMISSION_" + p));
 
-                                var authentication =
-                                    new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities()
-                                    );
+                                        log.info("User {} authenticated with authorities: {}", telegramId, authorities);
 
-                                return chain.filter(exchange)
-                                    .contextWrite(
-                                        ReactiveSecurityContextHolder.withAuthentication(authentication)
-                                    );
+                                        var userDetails = new TelegramUserDetails(user, authorities);
+
+                                        var authentication =
+                                            new UsernamePasswordAuthenticationToken(
+                                                userDetails,
+                                                null,
+                                                userDetails.getAuthorities()
+                                            );
+
+                                        return chain.filter(exchange)
+                                            .contextWrite(
+                                                ReactiveSecurityContextHolder.withAuthentication(authentication)
+                                            );
+                                    });
                             })
                     )
             )
-            .onErrorResume(e -> chain.filter(exchange));
+            .onErrorResume(e -> {
+                log.error("JWT filter error: {}", e.getMessage(), e);
+                return chain.filter(exchange);
+            });
     }
 }

@@ -1,6 +1,7 @@
 package dev.nelit.server.exceptions;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +15,15 @@ import java.util.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(AccessDeniedException.class)
+    public Mono<Map<String, Object>> handleAccessDeniedException() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", false);
+        body.put("message", "Access denied: insufficient permissions");
+        return Mono.just(body);
+    }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WebExchangeBindException.class)

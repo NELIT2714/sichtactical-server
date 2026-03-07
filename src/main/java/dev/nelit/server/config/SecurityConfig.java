@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -21,7 +20,6 @@ import java.util.UUID;
 
 @Configuration
 @EnableWebFluxSecurity
-@EnableReactiveMethodSecurity
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
@@ -73,15 +71,21 @@ public class SecurityConfig {
             .addFilterAt(jwtWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .pathMatchers(HttpMethod.POST, "/v1/users/**").permitAll()
 
-                .pathMatchers("/v1/admins").authenticated()
+                .pathMatchers(HttpMethod.POST, "/v1/users/init").permitAll()
+                .pathMatchers(HttpMethod.POST, "/v1/users/bot").permitAll()
+                .pathMatchers(HttpMethod.POST, "/v1/users/app").permitAll()
+
+                .pathMatchers(HttpMethod.GET, "/v1/admins/**").hasAuthority("PERMISSION_VIEW_ADMINS")
+                .pathMatchers(HttpMethod.POST, "/v1/admins").hasAuthority("PERMISSION_MANAGE_ADMINS")
+                .pathMatchers(HttpMethod.DELETE, "/v1/admins").hasAuthority("PERMISSION_MANAGE_ADMINS")
+
+                .pathMatchers(HttpMethod.POST, "/v1/events").hasAuthority("PERMISSION_CREATE_EVENT")
+                .pathMatchers(HttpMethod.POST, "/v1/notifications").hasAuthority("PERMISSION_CREATE_NOTIFICATION")
 
                 .pathMatchers("/v1/events/**").authenticated()
                 .pathMatchers("/v1/notifications/**").authenticated()
-
-                .pathMatchers(HttpMethod.POST, "/v1/users/init").permitAll()
-                .pathMatchers(HttpMethod.GET,  "/v1/users/me").authenticated()
+                .pathMatchers(HttpMethod.GET, "/v1/users/me").authenticated()
 
                 .anyExchange().denyAll()
             )

@@ -10,11 +10,15 @@ public class AdminResponseDTO {
     @JsonProperty("id_admin")
     private Integer idAdmin;
 
+    @JsonProperty("id_user")
+    private Integer idUser;
+
     @JsonProperty("permission")
     private Set<AdminPermissions> permissions;
 
-    public AdminResponseDTO(Integer idAdmin, Set<AdminPermissions> permissions) {
+    public AdminResponseDTO(Integer idAdmin, Integer idUser, Set<AdminPermissions> permissions) {
         this.idAdmin = idAdmin;
+        this.idUser = idUser;
         this.permissions = permissions;
     }
 
@@ -24,6 +28,14 @@ public class AdminResponseDTO {
 
     public void setIdAdmin(Integer idAdmin) {
         this.idAdmin = idAdmin;
+    }
+
+    public Integer getIdUser() {
+        return idUser;
+    }
+
+    public void setIdUser(Integer idUser) {
+        this.idUser = idUser;
     }
 
     public Set<AdminPermissions> getPermissions() {

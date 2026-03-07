@@ -9,4 +9,6 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface AdminRepository extends ReactiveCrudRepository<Admin, Integer> {
     Mono<Admin> findByIdUser(Integer idUser);
+
+    Mono<Admin> findByIdAdmin(Integer idAdmin);
 }
