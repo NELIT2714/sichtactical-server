@@ -58,7 +58,6 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(Exception.class)
     public Mono<Map<String, String>> handleGeneralException(Exception ex) {
         Map<String, String> error = new HashMap<>();

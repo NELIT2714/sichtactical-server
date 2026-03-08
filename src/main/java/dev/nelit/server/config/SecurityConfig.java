@@ -80,10 +80,19 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.POST, "/v1/admins").hasAuthority("PERMISSION_MANAGE_ADMINS")
                 .pathMatchers(HttpMethod.DELETE, "/v1/admins").hasAuthority("PERMISSION_MANAGE_ADMINS")
 
-                .pathMatchers(HttpMethod.POST, "/v1/events").hasAuthority("PERMISSION_CREATE_EVENT")
+//                .pathMatchers(HttpMethod.GET, "/v1/events/*/members").hasAuthority("PERMISSION_MANAGE_EVENTS")
+                .pathMatchers(HttpMethod.GET, "/v1/events/*/members").authenticated()
+                .pathMatchers(HttpMethod.POST, "/v1/events/*/members").authenticated()
+                .pathMatchers(HttpMethod.DELETE, "/v1/events/*/members").authenticated()
+
+                .pathMatchers(HttpMethod.GET, "/v1/events/**").authenticated()
+                .pathMatchers(HttpMethod.POST, "/v1/events").hasAuthority("PERMISSION_MANAGE_EVENTS")
+                .pathMatchers(HttpMethod.DELETE, "/v1/events").hasAuthority("PERMISSION_MANAGE_EVENTS")
+
                 .pathMatchers(HttpMethod.POST, "/v1/notifications").hasAuthority("PERMISSION_CREATE_NOTIFICATION")
 
-                .pathMatchers("/v1/events/**").authenticated()
+
+//                .pathMatchers("/v1/events/**").authenticated()
                 .pathMatchers("/v1/notifications/**").authenticated()
                 .pathMatchers(HttpMethod.GET, "/v1/users/me").authenticated()
 

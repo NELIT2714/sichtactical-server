@@ -70,6 +70,13 @@ public class EventMemberServiceImpl implements EventMemberService {
     }
 
     @Override
+    public Mono<List<EventMemberDataDTO>> getMembers(Event event) {
+        return eventMemberRepository.findEventMembersByIdEventAndRegisteredIsTrue(event.getIdEvent())
+            .map(EventMemberDataMapper::toResponse)
+            .collectList();
+    }
+
+    @Override
     public Mono<Void> signUp(Event event, User user, EventSignUpDTO dto) {
         return tx.transactional(
             eventMemberRepository.getEventMemberByIdEventAndIdUser(event.getIdEvent(), user.getIdUser())

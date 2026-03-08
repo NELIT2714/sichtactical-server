@@ -10,6 +10,7 @@ public final class EventMemberDataMapper {
 
     public static EventMemberDataDTO toResponse(EventMember member) {
         EventMemberDataDTO response = new EventMemberDataDTO();
+        response.setIdEventMember(member.getIdEventMember());
         response.setFullName(member.getFullName());
         response.setCallSign(member.getCallSign());
         response.setPhoneNumber(member.getPhoneNumber());

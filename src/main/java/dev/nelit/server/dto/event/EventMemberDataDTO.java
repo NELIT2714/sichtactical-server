@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 
 public class EventMemberDataDTO {
 
+    @JsonProperty("id_event_member")
+    private Integer idEventMember;
+
     @JsonProperty("full_name")
     private String fullName;
 
@@ -29,6 +32,14 @@ public class EventMemberDataDTO {
     private LocalDateTime updateTimestamp;
 
     public EventMemberDataDTO() {
+    }
+
+    public Integer getIdEventMember() {
+        return idEventMember;
+    }
+
+    public void setIdEventMember(Integer idEventMember) {
+        this.idEventMember = idEventMember;
     }
 
     public String getFullName() {

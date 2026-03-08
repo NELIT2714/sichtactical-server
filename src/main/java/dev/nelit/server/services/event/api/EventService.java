@@ -14,9 +14,9 @@ import java.util.Map;
 public interface EventService {
     Mono<EventPageResponseDTO> getEvents(int page, int size, Integer userID);
 
-    Mono<EventResponseDTO> getNearestEvent(int userID);
-
     Mono<Event> getEvent(int eventID);
+
+    Mono<EventResponseDTO> getNearestEvent(int userID);
 
     Mono<EventResponseDTO> getEventResponse(int eventID, Integer userID);
 
@@ -25,5 +25,4 @@ public interface EventService {
     Mono<Void> signOut(int eventID, int userID);
 
     Mono<Integer> upsertEvent(EventUpsertDTO dto);
-
 }

@@ -1,6 +1,5 @@
 package dev.nelit.server.controllers;
 
-import dev.nelit.server.dto.event.EventSignUpDTO;
 import dev.nelit.server.dto.event.EventUpsertDTO;
 import dev.nelit.server.security.TelegramUserDetails;
 import dev.nelit.server.services.event.api.EventService;
@@ -31,30 +30,16 @@ public class EventController {
             .map(response -> ResponseEntity.ok(Map.of("status", true, "response", response)));
     }
 
-    @GetMapping("/nearest")
-    public Mono<ResponseEntity<Map<String, Object>>> getNearestEvent(@AuthenticationPrincipal TelegramUserDetails user) {
-        return eventService.getNearestEvent(user.getUser().getIdUser())
-            .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
-    }
-
-    @GetMapping("/{eventID}")
-    public Mono<ResponseEntity<Map<String, Object>>> getEvent(@AuthenticationPrincipal TelegramUserDetails user, @PathVariable int eventID) {
+    @GetMapping("/{event_id}")
+    public Mono<ResponseEntity<Map<String, Object>>> getEvent(@AuthenticationPrincipal TelegramUserDetails user, @PathVariable(name = "event_id") int eventID) {
         return eventService.getEventResponse(eventID, user.getUser().getIdUser())
             .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
     }
 
-    @PostMapping("/{eventID}/members")
-    public Mono<ResponseEntity<Map<String, Object>>> signUp(@AuthenticationPrincipal TelegramUserDetails user,
-                                                            @PathVariable int eventID,
-                                                            @RequestBody EventSignUpDTO dto) {
-        return eventService.signUp(eventID, user.getUser().getIdUser(), dto)
-            .then(Mono.fromCallable(() -> ResponseEntity.ok(Map.of("status", true))));
-    }
-
-    @DeleteMapping("/{eventID}/members")
-    public Mono<ResponseEntity<Map<String, Object>>> signOut(@AuthenticationPrincipal TelegramUserDetails user, @PathVariable int eventID) {
-        return eventService.signOut(eventID, user.getUser().getIdUser())
-            .then(Mono.fromCallable(() -> ResponseEntity.ok(Map.of("status", true))));
+    @GetMapping("/nearest")
+    public Mono<ResponseEntity<Map<String, Object>>> getNearestEvent(@AuthenticationPrincipal TelegramUserDetails user) {
+        return eventService.getNearestEvent(user.getUser().getIdUser())
+            .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
     }
 
     @PostMapping
