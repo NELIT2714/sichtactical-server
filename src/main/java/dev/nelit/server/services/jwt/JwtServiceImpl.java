@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -59,19 +60,32 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Mono<String> extractSubject(String token) {
-        return Mono.fromCallable(() -> Jwts.parser()
-            .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret)))
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getSubject())
-            .subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> {
+            if (token == null || token.isBlank()) {
+                throw new IllegalArgumentException("Token is null or empty");
+            }
+            String subject = Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret)))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+            if (subject == null || subject.isBlank()) {
+                throw new IllegalArgumentException("Subject is null or empty in token");
+            }
+            return subject;
+        })
+        .subscribeOn(Schedulers.boundedElastic())
+        .timeout(Duration.ofSeconds(5));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Mono<Set<String>> extractPermissions(String token) {
         return Mono.fromCallable(() -> {
+            if (token == null || token.isBlank()) {
+                throw new IllegalArgumentException("Token is null or empty");
+            }
             Claims claims = Jwts.parser()
                 .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret)))
                 .build()
@@ -84,14 +98,23 @@ public class JwtServiceImpl implements JwtService {
                     .map(String.class::cast)
                     .collect(Collectors.toSet());
             }
-            return Collections.<String>emptySet();
+            return Collections.emptySet();
         }).subscribeOn(Schedulers.boundedElastic())
-          .onErrorReturn(Collections.emptySet());
+          .timeout(Duration.ofSeconds(5))
+          .map(set -> (Set<String>) set)
+          .onErrorResume(e -> Mono.just(Collections.emptySet()));
     }
 
     @Override
     public Mono<Boolean> isTokenValid(String token, UserResponseDTO user) {
         return Mono.fromCallable(() -> {
+            if (token == null || token.isBlank()) {
+                throw new IllegalArgumentException("Token is null or empty");
+            }
+            if (user == null || user.getTelegramData() == null) {
+                throw new IllegalArgumentException("User or user telegram data is null");
+            }
+            
             Claims claims = Jwts.parser()
                 .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret)))
                 .build()
@@ -103,9 +126,11 @@ public class JwtServiceImpl implements JwtService {
 
             return subject != null &&
                 subject.equals(user.getTelegramData().getTelegramId()) &&
+                expiration != null &&
                 !expiration.before(new Date());
         })
         .subscribeOn(Schedulers.boundedElastic())
+        .timeout(Duration.ofSeconds(5))
         .onErrorReturn(false);
     }
 }
