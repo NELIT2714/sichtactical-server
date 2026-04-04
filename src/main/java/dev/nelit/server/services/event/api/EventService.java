@@ -5,14 +5,12 @@ import dev.nelit.server.dto.event.EventResponseDTO;
 import dev.nelit.server.dto.event.EventSignUpDTO;
 import dev.nelit.server.dto.event.EventUpsertDTO;
 import dev.nelit.server.entity.event.Event;
-import dev.nelit.server.entity.user.User;
-import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 public interface EventService {
     Mono<EventPageResponseDTO> getEvents(int page, int size, Integer userID);
+
+    Mono<EventPageResponseDTO> getAdminEvents(int page, int size, Integer userID);
 
     Mono<Event> getEvent(int eventID);
 

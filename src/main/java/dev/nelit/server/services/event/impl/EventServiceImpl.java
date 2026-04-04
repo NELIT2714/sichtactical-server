@@ -15,6 +15,7 @@ import dev.nelit.server.entity.event.rule.EventRuleI18n;
 import dev.nelit.server.enums.NotificationCategories;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.event.EventMapper;
+import dev.nelit.server.mappers.event.EventMemberDataMapper;
 import dev.nelit.server.mappers.NotificationMapper;
 import dev.nelit.server.repositories.event.EventDataRepository;
 import dev.nelit.server.repositories.event.EventLocationRepository;
@@ -41,6 +42,7 @@ import reactor.util.function.Tuples;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -107,21 +109,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Mono<EventPageResponseDTO> getEvents(int page, int size, Integer userID) {
-        int offset = page * size;
+        return getEvents(page, size, userID, false);
+    }
 
-        Mono<Long> totalMono = eventRepository.countAll();
-        Flux<Event> eventsFlux = eventRepository.findAllPaged(LocalDate.now(ZoneId.of(timezone)), size, offset);
-
-        return totalMono
-            .zipWith(eventsFlux.concatMap(event -> getEventResponse(event.getIdEvent(), userID)).collectList())
-            .map(tuple -> {
-                long totalElements = tuple.getT1();
-                List<EventResponseDTO> content = tuple.getT2();
-
-                int totalPages = (int) Math.ceil((double) totalElements / size);
-
-                return new EventPageResponseDTO(content, totalElements, totalPages, page - 1, size);
-            });
+    @Override
+    public Mono<EventPageResponseDTO> getAdminEvents(int page, int size, Integer userID) {
+        return getEvents(page, size, userID, true);
     }
 
     @Override
@@ -137,6 +130,62 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Mono<EventResponseDTO> getEventResponse(int eventID, Integer userID) {
+        return getEventResponse(eventID, userID, null);
+    }
+
+    private Mono<EventPageResponseDTO> getEvents(int page, int size, Integer userID, boolean includeMembers) {
+        int offset = page * size;
+
+        Mono<Long> totalMono = eventRepository.countAll();
+        Mono<List<Event>> eventsMono = eventRepository
+            .findAllPaged(LocalDate.now(ZoneId.of(timezone)), size, offset)
+            .collectList()
+            .cache();
+
+        Mono<Map<Integer, List<EventMemberDataDTO>>> membersByEventMono = includeMembers
+            ? eventsMono.flatMap(this::getEventMembersByEvent)
+            : Mono.just(Map.of());
+
+        return totalMono
+            .zipWith(eventsMono)
+            .zipWith(membersByEventMono)
+            .flatMap(tuple -> {
+                long totalElements = tuple.getT1().getT1();
+                List<Event> events = tuple.getT1().getT2();
+                Map<Integer, List<EventMemberDataDTO>> membersByEvent = tuple.getT2();
+
+                return Flux.fromIterable(events)
+                    .concatMap(event -> getEventResponse(
+                        event.getIdEvent(),
+                        userID,
+                        includeMembers ? membersByEvent.getOrDefault(event.getIdEvent(), List.of()) : null
+                    ))
+                    .collectList()
+                    .map(content -> {
+                        int totalPages = (int) Math.ceil((double) totalElements / size);
+                        return new EventPageResponseDTO(content, totalElements, totalPages, page - 1, size);
+                    });
+            });
+    }
+
+    private Mono<Map<Integer, List<EventMemberDataDTO>>> getEventMembersByEvent(List<Event> events) {
+        if (events.isEmpty()) {
+            return Mono.just(Map.of());
+        }
+
+        List<Integer> eventIds = events.stream().map(Event::getIdEvent).toList();
+
+        return eventMemberRepository.findEventMembersByIdEventInAndRegisteredIsTrue(eventIds)
+            .map(member -> Tuples.of(member.getIdEvent(), EventMemberDataMapper.toResponse(member)))
+            .collectMultimap(Tuple2::getT1, Tuple2::getT2)
+            .map(grouped -> {
+                Map<Integer, List<EventMemberDataDTO>> result = new HashMap<>(grouped.size());
+                grouped.forEach((eventId, members) -> result.put(eventId, List.copyOf(members)));
+                return result;
+            });
+    }
+
+    private Mono<EventResponseDTO> getEventResponse(int eventID, Integer userID, List<EventMemberDataDTO> eventMembers) {
         return eventRepository.findById(eventID)
             .flatMap(event ->
                 Mono.zip(
@@ -167,7 +216,7 @@ public class EventServiceImpl implements EventService {
 
                     return Mono.zip(rulesI18nMono, programsI18nMono)
                         .map(i18nTuple -> EventMapper.toResponseDTO(
-                            event, location, data, rules, i18nTuple.getT1(), programs, i18nTuple.getT2(), isRegistered, members
+                            event, location, data, rules, i18nTuple.getT1(), programs, i18nTuple.getT2(), isRegistered, members, eventMembers
                         ));
                 })
             );

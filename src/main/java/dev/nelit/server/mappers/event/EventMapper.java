@@ -20,6 +20,14 @@ public final class EventMapper {
                                                  List<EventRule> rules, List<EventRuleI18n> rulesI18n,
                                                  List<EventProgram> programs, List<EventProgramI18n> programsI18n,
                                                  boolean isRegistered, int members) {
+        return toResponseDTO(event, location, data, rules, rulesI18n, programs, programsI18n, isRegistered, members, null);
+    }
+
+    public static EventResponseDTO toResponseDTO(Event event, EventLocation location, List<EventData> data,
+                                                 List<EventRule> rules, List<EventRuleI18n> rulesI18n,
+                                                 List<EventProgram> programs, List<EventProgramI18n> programsI18n,
+                                                 boolean isRegistered, int members,
+                                                 List<EventMemberDataDTO> eventMembers) {
         Set<String> languages = data.stream().map(EventData::getLang).collect(Collectors.toSet());
 
         EventResponseDTO response = new EventResponseDTO();
@@ -36,6 +44,7 @@ public final class EventMapper {
         response.setEventProgram(getProgramResponse(programs, programsI18n, languages));
         response.setRegistered(isRegistered);
         response.setMembers(members);
+        response.setEventMembers(eventMembers);
         return response;
     }
 

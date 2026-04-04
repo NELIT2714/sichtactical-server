@@ -80,6 +80,8 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.POST, "/v1/admins").hasAuthority("PERMISSION_MANAGE_ADMINS")
                 .pathMatchers(HttpMethod.DELETE, "/v1/admins").hasAuthority("PERMISSION_MANAGE_ADMINS")
 
+                .pathMatchers(HttpMethod.GET, "/v1/admin/events").authenticated()
+
 //                .pathMatchers(HttpMethod.GET, "/v1/events/*/members").hasAuthority("PERMISSION_MANAGE_EVENTS")
                 .pathMatchers(HttpMethod.GET, "/v1/events/*/members").authenticated()
                 .pathMatchers(HttpMethod.POST, "/v1/events/*/members").authenticated()

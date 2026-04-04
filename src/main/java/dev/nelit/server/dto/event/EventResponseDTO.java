@@ -1,5 +1,6 @@
 package dev.nelit.server.dto.event;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
@@ -48,6 +49,10 @@ public class EventResponseDTO {
 
     @JsonProperty("members")
     private Integer members;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("event_members")
+    private List<EventMemberDataDTO> eventMembers;
 
     public Integer getIdEvent() {
         return idEvent;
@@ -151,5 +156,13 @@ public class EventResponseDTO {
 
     public void setMembers(Integer members) {
         this.members = members;
+    }
+
+    public List<EventMemberDataDTO> getEventMembers() {
+        return eventMembers;
+    }
+
+    public void setEventMembers(List<EventMemberDataDTO> eventMembers) {
+        this.eventMembers = eventMembers;
     }
 }
