@@ -2,6 +2,7 @@ package dev.nelit.server.dto.notification;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.enums.NotificationCategories;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -11,12 +12,14 @@ public class NotificationResponseDTO {
     @JsonProperty("id_notification")
     private Integer idNotification;
 
+    @NotNull
     @JsonProperty("category")
     private NotificationCategories category;
 
     @JsonProperty("notification_data")
     private Map<String, NotificationDataDTO> notificationData;
 
+    @NotNull
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 

@@ -2,6 +2,9 @@ package dev.nelit.server.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.enums.EquipmentTypes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
@@ -10,21 +13,29 @@ public class EventMemberDataDTO {
     @JsonProperty("id_event_member")
     private Integer idEventMember;
 
+    @NotBlank
+    @Size(max = 150)
     @JsonProperty("full_name")
     private String fullName;
 
+    @Size(max = 20)
     @JsonProperty("call_sign")
     private String callSign;
 
+    @NotBlank
+    @Size(max = 16)
     @JsonProperty("phone_number")
     private String phoneNumber;
 
+    @NotNull
     @JsonProperty("equipment")
     private EquipmentTypes equipment;
 
+    @NotNull
     @JsonProperty("registered")
     private Boolean registered;
 
+    @NotNull
     @JsonProperty("registration_timestamp")
     private LocalDateTime registrationTimestamp;
 

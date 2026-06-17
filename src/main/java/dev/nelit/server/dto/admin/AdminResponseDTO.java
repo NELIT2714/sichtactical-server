@@ -2,6 +2,8 @@ package dev.nelit.server.dto.admin;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.enums.AdminPermissions;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Set;
 
@@ -10,9 +12,11 @@ public class AdminResponseDTO {
     @JsonProperty("id_admin")
     private Integer idAdmin;
 
+    @NotNull
     @JsonProperty("id_user")
     private Integer idUser;
 
+    @NotEmpty
     @JsonProperty("permission")
     private Set<AdminPermissions> permissions;
 

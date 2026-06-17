@@ -18,6 +18,8 @@ public interface EventMemberRepository extends ReactiveCrudRepository<EventMembe
 
     Mono<EventMember> getEventMemberByIdEventAndIdUser(Integer idEvent, Integer idUser);
 
+    Flux<EventMember> findEventMembersByIdEvent(Integer idEvent);
+
     Flux<EventMember> findEventMembersByIdEventAndRegisteredIsTrue(Integer idEvent);
 
     Flux<EventMember> findEventMembersByIdEventInAndRegisteredIsTrue(Collection<Integer> idEvents);

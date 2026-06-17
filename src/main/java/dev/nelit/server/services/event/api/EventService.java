@@ -23,4 +23,6 @@ public interface EventService {
     Mono<Void> signOut(int eventID, int userID);
 
     Mono<Integer> upsertEvent(EventUpsertDTO dto);
+
+    Mono<Void> removeEvent(int eventID);
 }

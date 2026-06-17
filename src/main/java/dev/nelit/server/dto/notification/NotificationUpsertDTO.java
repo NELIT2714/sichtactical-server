@@ -2,6 +2,8 @@ package dev.nelit.server.dto.notification;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.enums.NotificationCategories;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Map;
 
@@ -10,9 +12,11 @@ public class NotificationUpsertDTO {
     @JsonProperty("id_notification")
     private Integer idNotification;
 
+    @NotNull
     @JsonProperty("category")
     private NotificationCategories category;
 
+    @NotEmpty
     @JsonProperty("notification_data")
     private Map<String, NotificationDataDTO> notificationData;
 

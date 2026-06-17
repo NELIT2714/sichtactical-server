@@ -2,6 +2,9 @@ package dev.nelit.server.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -14,24 +17,33 @@ public class EventResponseDTO {
     @JsonProperty("id_event")
     private Integer idEvent;
 
+    @NotNull
     @JsonProperty("registration")
     private Boolean registration;
 
+    @NotNull
     @JsonProperty("event_date")
     private LocalDate eventDate;
 
+    @NotNull
     @JsonProperty("start_time")
     private LocalTime startTime;
 
+    @NotNull
     @JsonProperty("end_time")
     private LocalTime endTime;
 
+    @NotNull
+    @Min(1)
     @JsonProperty("max_members")
     private Integer maxMembers;
 
+    @NotNull
     @JsonProperty("location")
     private EventLocationDTO location;
 
+    @NotNull
+    @DecimalMin(value = "0.0")
     @JsonProperty("cost")
     private BigDecimal cost;
 
@@ -47,6 +59,7 @@ public class EventResponseDTO {
     @JsonProperty("registered")
     private Boolean isRegistered;
 
+    @Min(0)
     @JsonProperty("members")
     private Integer members;
 

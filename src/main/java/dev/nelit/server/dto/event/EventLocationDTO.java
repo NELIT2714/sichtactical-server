@@ -1,18 +1,25 @@
 package dev.nelit.server.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class EventLocationDTO {
 
     @JsonProperty("id_location")
     private Integer idLocation;
 
+    @NotBlank
+    @Size(max = 70)
     @JsonProperty("name")
     private String name;
 
+    @NotBlank
+    @Size(max = 200)
     @JsonProperty("address")
     private String address;
 
+    @Size(max = 60)
     @JsonProperty("google_maps")
     private String googleMaps;
 

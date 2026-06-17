@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.dto.admin.AdminResponseDTO;
 import dev.nelit.server.dto.event.EventMemberDataDTO;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
@@ -15,21 +19,26 @@ public class UserResponseDTO {
     @JsonProperty("id_user_telegram_data")
     private Integer idUserTelegramData;
 
+    @Size(max = 20)
     @JsonProperty("call_sign")
     private String callSign;
 
+    @Min(0)
     @JsonProperty("xp_total")
     private Integer xpTotal;
 
+    @DecimalMin(value = "0.0")
     @JsonProperty("balance")
     private BigDecimal balance;
 
+    @Size(min = 12, max = 12)
     @JsonProperty("referral_code")
     private String referralCode;
 
     @JsonProperty("telegram_data")
     private UserTelegramDataResponseDTO telegramData;
 
+    @NotNull
     @JsonProperty("save_data")
     private Boolean saveData;
 

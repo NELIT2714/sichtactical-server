@@ -41,10 +41,4 @@ public class EventController {
         return eventService.getNearestEvent(user.getUser().getIdUser())
             .map(response -> ResponseEntity.ok(Map.of("status", true, "event", response)));
     }
-
-    @PostMapping
-    public Mono<ResponseEntity<Map<String, Object>>> upsertEvent(@RequestBody EventUpsertDTO dto) {
-        return eventService.upsertEvent(dto)
-            .map(eventID -> ResponseEntity.ok(Map.of("status", true, "event_id", eventID)));
-    }
 }

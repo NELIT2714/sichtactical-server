@@ -1,30 +1,43 @@
 package dev.nelit.server.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public class UserTelegramDataResponseDTO {
 
     @JsonProperty("id_user_telegram_data")
     private Integer idUserTelegramData;
 
+    @NotBlank
+    @Size(max = 16)
     @JsonProperty("telegram_id")
     private String telegramId;
 
+    @NotBlank
+    @Size(max = 64)
     @JsonProperty("first_name")
     private String firstName;
 
+    @Size(max = 64)
     @JsonProperty("last_name")
     private String lastName;
 
+    @Size(max = 32)
     @JsonProperty("username")
     private String username;
 
+    @Size(max = 16)
     @JsonProperty("phone_number")
     private String phoneNumber;
 
+    @NotBlank
+    @Size(max = 3, min = 3)
     @JsonProperty("language_code")
     private String languageCode;
 
+    @NotNull
     @JsonProperty("is_premium")
     private Boolean isPremium;
 

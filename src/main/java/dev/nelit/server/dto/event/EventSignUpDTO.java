@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.nelit.server.enums.EquipmentTypes;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class EventSignUpDTO {
 
     @NotBlank
+    @Size(max = 150)
     @JsonProperty("full_name")
     private String fullName;
 
@@ -18,18 +21,19 @@ public class EventSignUpDTO {
     private String phoneNumber;
 
     @NotBlank
+    @Size(max = 20)
     @JsonProperty("call_sign")
     private String callSign;
 
-    @NotBlank
+    @NotNull
     @JsonProperty("equipment_type")
     private EquipmentTypes equipmentType;
 
-    @NotBlank
+    @NotNull
     @JsonProperty("save_data")
     private Boolean saveData;
 
-    @NotBlank
+    @NotNull
     @AssertTrue
     @JsonProperty("accept_rules")
     private Boolean acceptRules;

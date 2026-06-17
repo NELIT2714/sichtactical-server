@@ -1,6 +1,7 @@
 package dev.nelit.server.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Min;
 
 import java.util.List;
 
@@ -9,15 +10,19 @@ public class EventPageResponseDTO {
     @JsonProperty("events")
     private List<EventResponseDTO> content;
 
+    @Min(0)
     @JsonProperty("total_elements")
     private long totalElements;
 
+    @Min(0)
     @JsonProperty("total_pages")
     private int totalPages;
 
+    @Min(0)
     @JsonProperty("page")
     private int page;
 
+    @Min(0)
     @JsonProperty("size")
     private int size;
 

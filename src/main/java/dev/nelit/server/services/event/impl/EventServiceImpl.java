@@ -12,6 +12,8 @@ import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
 import dev.nelit.server.entity.event.rule.EventRuleI18n;
+import dev.nelit.server.entity.notification.Notification;
+import dev.nelit.server.entity.notification.NotificationI18n;
 import dev.nelit.server.enums.NotificationCategories;
 import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.event.EventMapper;
@@ -247,24 +249,12 @@ public class EventServiceImpl implements EventService {
                 if (dto.getIdEvent() != null) {
                     eventMonoWithFlag = eventRepository.findById(dto.getIdEvent())
                         .flatMap(existing -> {
-                            if (dto.getEventDate() != null) {
-                                existing.setEventDate(dto.getEventDate());
-                            }
-                            if (dto.getStartTime() != null) {
-                                existing.setStartTime(dto.getStartTime());
-                            }
-                            if (dto.getEndTime() != null) {
-                                existing.setEndTime(dto.getEndTime());
-                            }
-                            if (dto.getMaxMembers() != null) {
-                                existing.setMaxMembers(dto.getMaxMembers());
-                            }
-                            if (location.getIdLocation() != null) {
-                                existing.setIdLocation(location.getIdLocation());
-                            }
-                            if (dto.getCost() != null) {
-                                existing.setCost(dto.getCost());
-                            }
+                            if (dto.getEventDate() != null) existing.setEventDate(dto.getEventDate());
+                            if (dto.getStartTime() != null) existing.setStartTime(dto.getStartTime());
+                            if (dto.getEndTime() != null) existing.setEndTime(dto.getEndTime());
+                            if (dto.getMaxMembers() != null) existing.setMaxMembers(dto.getMaxMembers());
+                            if (location.getIdLocation() != null) existing.setIdLocation(location.getIdLocation());
+                            if (dto.getCost() != null) existing.setCost(dto.getCost());
                             return eventRepository.save(existing).map(e -> Tuples.of(e, false));
                         })
                         .switchIfEmpty(Mono.from(eventRepository.save(new Event(
@@ -294,12 +284,43 @@ public class EventServiceImpl implements EventService {
                         eventDataService.upsertEventData(event.getIdEvent(), dto.getEventData()),
                         eventRuleService.upsertEventRules(event.getIdEvent(), dto.getEventRules()),
                         eventProgramService.upsertEventProgram(event.getIdEvent(), dto.getEventProgram())
-                    ).then(created ? sendNotification(dto.getEventData()).thenReturn(event.getIdEvent()) : Mono.just(event.getIdEvent()));
+                    ).then(created
+                        ? createNotification(dto.getEventData())
+                        .onErrorResume(e -> Mono.empty())
+                        .thenReturn(event.getIdEvent())
+                        : Mono.just(event.getIdEvent()));
                 });
             }));
     }
 
-    private Mono<Void> sendNotification(Map<String, EventDataDTO> eventData) {
+    @Override
+    public Mono<Void> removeEvent(int eventID) {
+        return tx.transactional(
+            getEvent(eventID)
+                .flatMap(event -> eventMemberRepository.deleteAll(eventMemberRepository.findEventMembersByIdEvent(eventID))
+                    .then(eventRepository.deleteById(event.getIdEvent())))
+        );
+    }
+
+    private Mono<Void> createNotification(Map<String, EventDataDTO> eventData) {
+        return buildLocalizedNotifications(eventData)
+            .zipWith(telegramDataService.getAllTelegramIds().collectList())
+            .flatMap(tuple -> {
+                Map<String, NotificationDataDTO> localized = tuple.getT1();
+                List<UserTelegramIdAndLanguageCodeDTO> users = tuple.getT2();
+
+                NotificationUpsertDTO notificationDTO = new NotificationUpsertDTO(NotificationCategories.EVENT, localized);
+
+                return notificationService.upsertNotification(notificationDTO)
+                    .flatMap(notification ->
+                        notificationService.getNotificationI18n(notification.getIdNotification())
+                            .collectList()
+                            .flatMap(i18nList -> publishNotification(notification, i18nList, users))
+                    );
+            });
+    }
+
+    private Mono<Map<String, NotificationDataDTO>> buildLocalizedNotifications(Map<String, EventDataDTO> eventData) {
         return Flux.fromIterable(eventData.entrySet())
             .flatMap(entry -> {
                 String lang = entry.getKey();
@@ -315,26 +336,16 @@ public class EventServiceImpl implements EventService {
                     new NotificationDataDTO(tuple.getT1(), tuple.getT2(), tuple.getT3())
                 ));
             })
-            .collectMap(Map.Entry::getKey, Map.Entry::getValue)
-            .zipWith(telegramDataService.getAllTelegramIds().collectList())
-            .flatMap(tuple -> {
-                Map<String, NotificationDataDTO> localized = tuple.getT1();
-                List<UserTelegramIdAndLanguageCodeDTO> users = tuple.getT2();
+            .collectMap(Map.Entry::getKey, Map.Entry::getValue);
+    }
 
-                NotificationUpsertDTO notificationDTO = new NotificationUpsertDTO(NotificationCategories.EVENT, localized);
-
-                return notificationService.upsertNotification(notificationDTO)
-                    .flatMap(notification ->
-                        notificationService.getNotificationI18n(notification.getIdNotification())
-                            .collectList()
-                            .flatMap(i18nList -> publisher.publish(
-                                "notifications.event",
-                                Map.of(
-                                    "notification", NotificationMapper.toResponseDTO(notification, i18nList),
-                                    "users", users
-                                )
-                            ))
-                    );
-            });
+    private Mono<Void> publishNotification(Notification notification, List<NotificationI18n> i18nList, List<UserTelegramIdAndLanguageCodeDTO> users) {
+        return publisher.publish(
+            "notifications.event",
+            Map.of(
+                "notification", NotificationMapper.toResponseDTO(notification, i18nList),
+                "users", users
+            )
+        ).onErrorResume(e -> Mono.empty());
     }
  }
