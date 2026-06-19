@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
         return telegramDataService.getUserByTelegramID(telegramID)
             .flatMap(userTelegramData ->
                 userRepository.getUserByIdUserTelegramData(userTelegramData.getIdUserTelegramData())
-                    .flatMap(user -> adminService.getAdminResponse(user.getIdUser())
+                    .flatMap(user -> adminService.findAdminResponse(user.getIdUser())
                         .flatMap(adminResponse -> buildUserResponse(user, userTelegramData, adminResponse))
                         .switchIfEmpty(Mono.defer(() -> buildUserResponse(user, userTelegramData, null)))
                     )
