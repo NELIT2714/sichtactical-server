@@ -49,12 +49,15 @@ public class UserServiceImpl implements UserService {
             telegramDataService.upsertTelegramData(dto)
                 .flatMap(tgData ->
                     userRepository.getUserByIdUserTelegramData(tgData.getIdUserTelegramData())
+                        .switchIfEmpty(Mono.defer(() ->
+                            referralService.generate()
+                                .flatMap(code -> userRepository.save(new User(tgData.getIdUserTelegramData(), code)))
+                        ))
                         .flatMap(user -> {
                             if (!Objects.equals(user.getSaveData(), dto.getSaveData()) && dto.getSaveData() != null) {
                                 user.setSaveData(dto.getSaveData());
                                 return userRepository.save(user);
                             }
-
                             return Mono.just(user);
                         })
                         .flatMap(user ->
