@@ -11,6 +11,8 @@ public interface AdminService {
 
     Mono<AdminResponseDTO> getAdminResponse(int userID);
 
+    Mono<AdminResponseDTO> findAdminResponse(int userID);
+
     Mono<List<AdminResponseDTO>> getAdmins();
 
     Mono<AdminResponseDTO> getAdmin(int adminID);

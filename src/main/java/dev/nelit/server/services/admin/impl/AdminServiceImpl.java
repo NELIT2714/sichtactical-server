@@ -41,6 +41,17 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public Mono<AdminResponseDTO> findAdminResponse(int userID) {
+        return adminRepository.findByIdUser(userID)
+            .flatMap(admin -> adminPermissionService.getPermissions(admin.getIdAdmin())
+                .map(permissions -> new AdminResponseDTO(
+                    admin.getIdAdmin(),
+                    admin.getIdUser(),
+                    permissions.stream().map(AdminPermission::getPermission).collect(Collectors.toSet())
+                )));
+    }
+
+    @Override
     public Mono<List<AdminResponseDTO>> getAdmins() {
         return adminRepository.findAll().flatMap(admin -> getAdminResponse(admin.getIdUser())).collectList();
     }

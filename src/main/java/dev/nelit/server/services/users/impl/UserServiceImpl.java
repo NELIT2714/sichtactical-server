@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
                             return Mono.just(user);
                         })
                         .flatMap(user ->
-                            adminService.getAdminResponse(user.getIdUser())
+                            adminService.findAdminResponse(user.getIdUser())
                                 .map(admin -> UserMapper.toResponseDTO(user, tgData, admin))
                                 .switchIfEmpty(Mono.fromCallable(() -> UserMapper.toResponseDTO(user, tgData, null))))
                 ));
