@@ -259,15 +259,17 @@ CREATE TABLE IF NOT EXISTS tbl_events_attendance
     UNIQUE (id_event, id_user),
 
     FOREIGN KEY (id_event) REFERENCES tbl_events(id_event)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
     FOREIGN KEY (id_user) REFERENCES tbl_users(id_user)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
 
     FOREIGN KEY (marked_by) REFERENCES tbl_admins(id_admin)
-        ON DELETE RESTRICT ON UPDATE CASCADE
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
 );
-
 
 
 -- INDEXES
