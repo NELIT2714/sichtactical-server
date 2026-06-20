@@ -29,9 +29,15 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public Mono<Admin> findAdminByUserId(int userId) {
+        return adminRepository.findByIdUser(userId)
+            .switchIfEmpty(Mono.error(() -> new HTTPException(HttpStatus.FORBIDDEN, "Admin not found")));
+    }
+
+    @Override
     public Mono<AdminResponseDTO> getAdminResponse(int userID) {
         return adminRepository.findByIdUser(userID)
-            .switchIfEmpty(Mono.error(() -> new HTTPException(HttpStatus.NOT_FOUND, "Admin not found")))
+            .switchIfEmpty(Mono.error(() -> new HTTPException(HttpStatus.FORBIDDEN, "Admin not found")))
             .flatMap(admin -> adminPermissionService.getPermissions(admin.getIdAdmin())
                 .map(permissions -> new AdminResponseDTO(
                     admin.getIdAdmin(),

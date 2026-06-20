@@ -5,9 +5,7 @@ import dev.nelit.server.dto.event.*;
 import dev.nelit.server.dto.notification.NotificationDataDTO;
 import dev.nelit.server.dto.notification.NotificationUpsertDTO;
 import dev.nelit.server.dto.user.UserTelegramIdAndLanguageCodeDTO;
-import dev.nelit.server.entity.event.Event;
-import dev.nelit.server.entity.event.EventData;
-import dev.nelit.server.entity.event.EventLocation;
+import dev.nelit.server.entity.event.*;
 import dev.nelit.server.entity.event.program.EventProgram;
 import dev.nelit.server.entity.event.program.EventProgramI18n;
 import dev.nelit.server.entity.event.rule.EventRule;
@@ -19,10 +17,7 @@ import dev.nelit.server.exceptions.HTTPException;
 import dev.nelit.server.mappers.event.EventMapper;
 import dev.nelit.server.mappers.event.EventMemberDataMapper;
 import dev.nelit.server.mappers.NotificationMapper;
-import dev.nelit.server.repositories.event.EventDataRepository;
-import dev.nelit.server.repositories.event.EventLocationRepository;
-import dev.nelit.server.repositories.event.EventMemberRepository;
-import dev.nelit.server.repositories.event.EventRepository;
+import dev.nelit.server.repositories.event.*;
 import dev.nelit.server.repositories.event.program.EventProgramI18nRepository;
 import dev.nelit.server.repositories.event.program.EventProgramRepository;
 import dev.nelit.server.repositories.event.rule.EventRuleI18nRepository;
@@ -76,6 +71,7 @@ public class EventServiceImpl implements EventService {
     private final NotificationPublisherService publisher;
 
     private final TransactionalOperator tx;
+    private final EventAttendanceRepository attendanceRepository;
 
     public EventServiceImpl(EventRepository eventRepository,
                             EventLocationRepository eventLocationRepository,
@@ -87,7 +83,7 @@ public class EventServiceImpl implements EventService {
                             EventLocationService eventLocationService,
                             EventDataService eventDataService,
                             EventRuleService eventRuleService,
-                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserTelegramDataService telegramDataService, UserService userService, NotificationService notificationService, MessageProvider messageProvider, NotificationPublisherService publisher, TransactionalOperator tx) {
+                            EventProgramService eventProgramService, EventMemberServiceImpl eventMemberService, UserTelegramDataService telegramDataService, UserService userService, NotificationService notificationService, MessageProvider messageProvider, NotificationPublisherService publisher, TransactionalOperator tx, EventAttendanceRepository attendanceRepository) {
         this.eventRepository = eventRepository;
         this.eventLocationRepository = eventLocationRepository;
         this.eventDataRepository = eventDataRepository;
@@ -107,6 +103,7 @@ public class EventServiceImpl implements EventService {
         this.messageProvider = messageProvider;
         this.publisher = publisher;
         this.tx = tx;
+        this.attendanceRepository = attendanceRepository;
     }
 
     @Override
@@ -177,12 +174,37 @@ public class EventServiceImpl implements EventService {
 
         List<Integer> eventIds = events.stream().map(Event::getIdEvent).toList();
 
-        return eventMemberRepository.findEventMembersByIdEventInAndRegisteredIsTrue(eventIds)
-            .map(member -> Tuples.of(member.getIdEvent(), EventMemberDataMapper.toResponse(member)))
-            .collectMultimap(Tuple2::getT1, Tuple2::getT2)
+        Mono<Map<String, Boolean>> attendanceMapMono = attendanceRepository.findByIdEventIn(eventIds)
+            .collectMap(
+                a -> a.getIdEvent() + ":" + a.getIdUser(),
+                EventAttendance::getAttended
+            );
+
+        Mono<Map<Integer, List<EventMember>>> membersByEventMono = eventMemberRepository
+            .findEventMembersByIdEventInAndRegisteredIsTrue(eventIds)
+            .collectMultimap(EventMember::getIdEvent, m -> m)
             .map(grouped -> {
-                Map<Integer, List<EventMemberDataDTO>> result = new HashMap<>(grouped.size());
+                Map<Integer, List<EventMember>> result = new HashMap<>(grouped.size());
                 grouped.forEach((eventId, members) -> result.put(eventId, List.copyOf(members)));
+                return result;
+            });
+
+        return membersByEventMono.zipWith(attendanceMapMono)
+            .map(tuple -> {
+                Map<Integer, List<EventMember>> membersByEvent = tuple.getT1();
+                Map<String, Boolean> attendanceMap = tuple.getT2();
+
+                Map<Integer, List<EventMemberDataDTO>> result = new HashMap<>();
+                membersByEvent.forEach((eventId, members) -> {
+                    List<EventMemberDataDTO> dtos = members.stream().map(member -> {
+                        EventMemberDataDTO dto = EventMemberDataMapper.toResponse(member);
+                        Boolean attended = attendanceMap.get(eventId + ":" + member.getIdUser());
+                        dto.setAttended(attended);
+                        return dto;
+                    }).toList();
+                    result.put(eventId, dtos);
+                });
+
                 return result;
             });
     }

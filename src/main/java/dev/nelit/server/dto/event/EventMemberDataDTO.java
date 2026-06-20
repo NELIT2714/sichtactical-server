@@ -35,6 +35,9 @@ public class EventMemberDataDTO {
     @JsonProperty("registered")
     private Boolean registered;
 
+    @JsonProperty("attended")
+    private Boolean attended;
+
     @NotNull
     @JsonProperty("registration_timestamp")
     private LocalDateTime registrationTimestamp;
@@ -91,6 +94,14 @@ public class EventMemberDataDTO {
 
     public void setRegistered(Boolean registered) {
         this.registered = registered;
+    }
+
+    public Boolean getAttended() {
+        return attended;
+    }
+
+    public void setAttended(Boolean attended) {
+        this.attended = attended;
     }
 
     public LocalDateTime getRegistrationTimestamp() {

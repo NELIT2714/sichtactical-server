@@ -245,6 +245,31 @@ CREATE TABLE IF NOT EXISTS tbl_notifications_i18n
 
 
 
+CREATE TABLE IF NOT EXISTS tbl_events_attendance
+(
+    id_attendance   INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_event        INTEGER UNSIGNED NOT NULL,
+    id_user         INTEGER UNSIGNED NOT NULL,
+    attended        BOOLEAN NOT NULL,
+    marked_by       INTEGER UNSIGNED NOT NULL,
+    marked_at       DATETIME NOT NULL,
+    updated_at      DATETIME DEFAULT NULL,
+
+    PRIMARY KEY (id_attendance),
+    UNIQUE (id_event, id_user),
+
+    FOREIGN KEY (id_event) REFERENCES tbl_events(id_event)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    FOREIGN KEY (id_user) REFERENCES tbl_users(id_user)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    FOREIGN KEY (marked_by) REFERENCES tbl_admins(id_admin)
+        ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+
+
 -- INDEXES
 CREATE INDEX IF NOT EXISTS idx_users_telegram_data_id
     ON tbl_users_telegram_data(id_user_telegram_data);
@@ -269,3 +294,9 @@ CREATE INDEX IF NOT EXISTS idx_events_rules_event
 
 CREATE INDEX IF NOT EXISTS idx_events_rules_position
     ON tbl_events_rules(id_event, position);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_event
+    ON tbl_events_attendance(id_event);
+
+CREATE INDEX IF NOT EXISTS idx_attendance_user
+    ON tbl_events_attendance(id_user);

@@ -10,17 +10,12 @@ import java.util.Collection;
 
 @Repository
 public interface EventMemberRepository extends ReactiveCrudRepository<EventMember, Integer> {
+    Mono<EventMember> findByIdEventMemberAndIdEvent(Integer idEventMember, Integer idEvent);
     Mono<Boolean> existsEventMemberByIdEventAndIdUserAndRegisteredIsTrue(Integer idEvent, Integer idUser);
-
     Mono<Integer> countEventMemberByIdEventAndRegisteredIsTrue(Integer idEvent);
-
     Mono<EventMember> findFirstByIdUserOrderByIdEventMember(Integer idUser);
-
     Mono<EventMember> getEventMemberByIdEventAndIdUser(Integer idEvent, Integer idUser);
-
     Flux<EventMember> findEventMembersByIdEvent(Integer idEvent);
-
     Flux<EventMember> findEventMembersByIdEventAndRegisteredIsTrue(Integer idEvent);
-
     Flux<EventMember> findEventMembersByIdEventInAndRegisteredIsTrue(Collection<Integer> idEvents);
 }
