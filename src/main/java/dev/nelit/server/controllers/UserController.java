@@ -1,8 +1,10 @@
 package dev.nelit.server.controllers;
 
 
+import dev.nelit.server.dto.user.UserResponseDTO;
 import dev.nelit.server.dto.user.UserUpsertAppDTO;
 import dev.nelit.server.dto.user.UserUpsertDTO;
+import dev.nelit.server.repositories.event.EventAttendanceRepository;
 import dev.nelit.server.security.TelegramUserDetails;
 import dev.nelit.server.services.auth.TelegramAuthServiceImpl;
 import dev.nelit.server.services.users.impl.UserServiceImpl;
@@ -19,10 +21,12 @@ public class UserController {
 
     private final UserServiceImpl userService;
     private final TelegramAuthServiceImpl telegramAuthService;
+    private final EventAttendanceRepository attendanceRepository;
 
-    public UserController(UserServiceImpl userService, TelegramAuthServiceImpl telegramAuthService) {
+    public UserController(UserServiceImpl userService, TelegramAuthServiceImpl telegramAuthService, EventAttendanceRepository attendanceRepository) {
         this.userService = userService;
         this.telegramAuthService = telegramAuthService;
+        this.attendanceRepository = attendanceRepository;
     }
 
     @PostMapping(path = "/init")
@@ -38,12 +42,18 @@ public class UserController {
 
     @GetMapping("/me")
     public Mono<ResponseEntity<Map<String, Object>>> getUser(@AuthenticationPrincipal TelegramUserDetails userDetails) {
-        return Mono.just(ResponseEntity.ok(
-            Map.of(
-                "status", true,
-                "user", userDetails.getUser()
-            )
-        ));
+        Integer idUser = userDetails.getUser().getIdUser();
+
+        return attendanceRepository.countByIdUserAndAttendedIsTrue(idUser)
+            .defaultIfEmpty(0)
+            .map(count -> {
+                UserResponseDTO user = userDetails.getUser();
+                user.setGamesPlayed(count);
+                return ResponseEntity.ok(Map.of(
+                    "status", true,
+                    "user", user
+                ));
+            });
     }
 
     @PostMapping("/bot")

@@ -12,4 +12,6 @@ import java.util.Collection;
 public interface EventAttendanceRepository extends ReactiveCrudRepository<EventAttendance, Integer> {
     Mono<EventAttendance> findByIdEventAndIdUser(Integer idEvent, Integer idUser);
     Flux<EventAttendance> findByIdEventIn(Collection<Integer> idEvents);
+    Flux<EventAttendance> findByIdEventAndAttendedIsTrue(Integer idEvent);
+    Mono<Integer> countByIdUserAndAttendedIsTrue(Integer idUser);
 }

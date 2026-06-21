@@ -38,5 +38,8 @@ public interface EventRepository extends ReactiveCrudRepository<Event, Integer> 
         @Param("today") LocalDate today,
         @Param("nowTime") LocalTime nowTime
     );
+
+    @Query("SELECT * FROM tbl_events WHERE event_date = :date")
+    Flux<Event> findByEventDate(@Param("date") LocalDate date);
 }
 

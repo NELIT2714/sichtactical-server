@@ -50,6 +50,9 @@ public class UserResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private AdminResponseDTO adminData;
 
+    @JsonProperty("games_played")
+    private Integer gamesPlayed;
+
     public UserResponseDTO() {
     }
 
@@ -132,4 +135,7 @@ public class UserResponseDTO {
     public void setAdminData(AdminResponseDTO adminData) {
         this.adminData = adminData;
     }
+
+    public Integer getGamesPlayed() { return gamesPlayed; }
+    public void setGamesPlayed(Integer gamesPlayed) { this.gamesPlayed = gamesPlayed; }
 }
