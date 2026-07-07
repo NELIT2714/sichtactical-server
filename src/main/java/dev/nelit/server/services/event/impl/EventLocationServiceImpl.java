@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 @Service
 public class EventLocationServiceImpl implements EventLocationService {
 
@@ -30,11 +32,22 @@ public class EventLocationServiceImpl implements EventLocationService {
                     if (dto.getGoogleMaps() != null) existing.setGoogleMaps(dto.getGoogleMaps());
                     return eventLocationRepository.save(existing);
                 })
-                .switchIfEmpty(eventLocationRepository.save(new EventLocation(dto.getName(), dto.getAddress(), dto.getGoogleMaps()))));
+                .switchIfEmpty(Mono.defer(() -> findExistingOrCreate(dto))));
         }
 
-        return tx.transactional(eventLocationRepository.save(new EventLocation(
-            dto.getName(), dto.getAddress(), dto.getGoogleMaps()
-        )));
+        return tx.transactional(findExistingOrCreate(dto));
+    }
+
+    private Mono<EventLocation> findExistingOrCreate(EventLocationDTO dto) {
+        return eventLocationRepository.findByNameAndAddress(dto.getName(), dto.getAddress())
+            .flatMap(existing -> {
+                if (Objects.equals(existing.getGoogleMaps(), dto.getGoogleMaps())) {
+                    return Mono.just(existing);
+                }
+
+                existing.setGoogleMaps(dto.getGoogleMaps());
+                return eventLocationRepository.save(existing);
+            })
+            .switchIfEmpty(eventLocationRepository.save(new EventLocation(dto.getName(), dto.getAddress(), dto.getGoogleMaps())));
     }
 }
